@@ -43,4 +43,4 @@ The API key stays in Electron's main process, not renderer code.
 npm run dist
 ```
 
-The portable artifact is written to `dist\Orbit Cursor Vision 0.2.0.exe`. It includes the local Windows UI Automation worker used by Cursor Vision.
+The portable artifact is written to `dist\Orbit Cursor Vision 0.2.1.exe`. It includes the local Windows UI Automation worker used by Cursor Vision.

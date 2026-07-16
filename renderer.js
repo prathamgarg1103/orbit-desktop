@@ -6,6 +6,18 @@ const hint = document.querySelector("#hint");
 let enabled = false;
 
 window.orbit.onCursorUpdate((payload) => {
+  if (payload.kind === "shortcut-status") {
+    document.body.dataset.cursorShortcutReady = String(Boolean(payload.cursorShortcutReady));
+    document.body.dataset.overlayShortcutReady = String(Boolean(payload.overlayShortcutReady));
+    if (!payload.cursorShortcutReady) {
+      card.classList.remove("active");
+      eyebrow.textContent = "SHORTCUT UNAVAILABLE";
+      title.textContent = "Ctrl + Shift + Space is busy";
+      detail.textContent = "Another app owns Cursor Vision's hotkey. Close it, then restart Orbit.";
+      hint.textContent = "The overlay can still be shown or hidden with Ctrl + Shift + O.";
+    }
+  }
+
   if (payload.kind === "state") {
     enabled = Boolean(payload.enabled);
     card.classList.toggle("active", enabled);

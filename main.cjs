@@ -3,6 +3,7 @@ const { spawn } = require("node:child_process");
 const path = require("node:path");
 
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5.6";
+const RESPONSES_URL = (process.env.ORBIT_RESPONSES_URL || "https://api.openai.com/v1/responses").replace(/\/+$/, "");
 const OVERLAY = { width: 370, height: 166, offset: 22 };
 const DWELL_MS = 650;
 const CURSOR_CROP = { width: 480, height: 320, maxWidth: 640 };
@@ -19,6 +20,8 @@ let uiaWorker;
 let workerOutput = "";
 let workerRequestId = 0;
 let appIsQuitting = false;
+let cursorShortcutReady = false;
+let overlayShortcutReady = false;
 const workerRequests = new Map();
 
 function createOverlay() {
@@ -321,7 +324,7 @@ async function explainTarget(target, visualContext) {
   }];
   if (visualContext?.imageUrl) content.push({ type: "input_image", image_url: visualContext.imageUrl, detail: "low" });
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
+  const response = await fetch(RESPONSES_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -382,8 +385,9 @@ function toggleOverlay() {
 app.whenReady().then(() => {
   createOverlay();
   startUiaWorker();
-  globalShortcut.register("Control+Shift+Space", toggleCursorVision);
-  globalShortcut.register("Control+Shift+O", toggleOverlay);
+  cursorShortcutReady = globalShortcut.register("Control+Shift+Space", toggleCursorVision);
+  overlayShortcutReady = globalShortcut.register("Control+Shift+O", toggleOverlay);
+  setTimeout(() => sendUpdate({ kind: "shortcut-status", cursorShortcutReady, overlayShortcutReady }), 800);
   setInterval(pollCursor, 40);
   app.on("activate", () => { if (!overlayWindow) createOverlay(); });
 });
