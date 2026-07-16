@@ -1,0 +1,39 @@
+{
+  "name": "orbit-desktop",
+  "version": "0.2.0",
+  "private": true,
+  "description": "A hover-first Windows AI companion that explains the interface under your cursor.",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check main.cjs && node --check preload.cjs && node --check renderer.js",
+    "dist": "npm run check && electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.orbit.cursorvision",
+    "productName": "Orbit Cursor Vision",
+    "asar": true,
+    "compression": "store",
+    "asarUnpack": [
+      "uia-worker.ps1"
+    ],
+    "files": [
+      "**/*",
+      "!dist{,/**}"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}
