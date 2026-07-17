@@ -100,11 +100,12 @@ export function createDiyaServer({ config, database }) {
       }
       if (request.method === "POST" && path === "/v1/device-sessions") {
         const body = await readJson(request);
-        const code = stringValue(body.bootstrapCode, "bootstrapCode", 500);
-        if (!safeEqual(code, config.bootstrapCode)) throw new HttpError(401, "The pairing code is not valid.", "invalid_pairing_code");
+        const code = stringValue(body.enrollmentCode || body.inviteCode || body.bootstrapCode, "enrollmentCode", 500);
+        const invited = safeEqual(code, config.bootstrapCode) ? null : database.consumeInvite(hash(code));
+        if (!safeEqual(code, config.bootstrapCode) && !invited) throw new HttpError(401, "The enrollment code is not valid.", "invalid_enrollment_code");
         const accessToken = issueAccessToken();
         const device = database.createDevice({ name: String(body.deviceName || "Diya desktop").slice(0, 100), tokenHash: hash(accessToken) });
-        return sendJson(response, 201, { accessToken, device });
+        return sendJson(response, 201, { accessToken, device, enrollment: invited ? { source: "invite", label: invited.label } : { source: "bootstrap" } });
       }
       if (request.method === "GET" && path === "/v1/me") {
         const device = authenticate(request, database);

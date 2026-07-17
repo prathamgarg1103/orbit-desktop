@@ -114,12 +114,12 @@ async function cloudRequest(pathname, { method = "GET", body } = {}) {
   return payload;
 }
 
-async function pairCloud(url, bootstrapCode) {
+async function pairCloud(url, enrollmentCode) {
   const endpoint = normalizeCloudUrl(url);
   const response = await fetch(`${endpoint}/v1/device-sessions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bootstrapCode, deviceName: "Diya desktop" }),
+    body: JSON.stringify({ enrollmentCode, bootstrapCode: enrollmentCode, deviceName: "Diya desktop" }),
     signal: AbortSignal.timeout(20_000)
   }).catch((error) => { throw new Error(`Diya Cloud is unavailable: ${error.message}`); });
   const payload = await response.json().catch(() => ({}));
@@ -414,7 +414,7 @@ ipcMain.handle("companion:saveConnector", async (_event, payload) => {
     if (!token) throw new Error("Paste an OpenAI API key to enable live Talk and voice.");
     saveConnectorCredentials({ openaiApiKey: token });
   } else if (provider === "cloud") {
-    if (!token || !cloudUrl) throw new Error("Diya Cloud needs its URL and a pairing code.");
+    if (!token || !cloudUrl) throw new Error("Diya Cloud needs its URL and an invite or pairing code.");
     const paired = await pairCloud(cloudUrl, token);
     saveConnectorCredentials({ cloudUrl: paired.url, cloudToken: paired.token });
     await refreshCloudConnectors();

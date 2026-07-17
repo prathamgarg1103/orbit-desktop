@@ -1,6 +1,6 @@
 {
   "name": "diya-desktop",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "Diya is a hotkey-activated, screen-aware desktop AI buddy that teaches and launches approval-first agents.",
   "main": "main.cjs",

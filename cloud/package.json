@@ -1,6 +1,6 @@
 {
   "name": "diya-cloud",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Secure API service for Diya desktop sessions and approval-first agent actions.",
@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node src/index.mjs",
+    "admin": "node src/manage.mjs",
     "test": "node --test test/*.test.mjs"
   }
 }

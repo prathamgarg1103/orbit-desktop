@@ -16,14 +16,25 @@ npm start
 
 Node 22.13+ is required because the service uses the built-in SQLite driver. Put Diya Cloud behind HTTPS in production; the desktop's Electron main process communicates directly with it, so browser CORS is disabled unless you explicitly set `DIYA_ALLOWED_ORIGINS`. Existing `ORBIT_*` server variables remain accepted during a transition, but new deployments should use `DIYA_*`.
 
-## Pair a desktop
+## Enroll an early-access desktop
 
-`POST /v1/device-sessions` accepts the server's short-lived `DIYA_BOOTSTRAP_CODE` and returns a revocable desktop access token. Diya's **Cloud** connection does this pairing from the app, so the raw device token never needs to be copied through the renderer. Rotate the bootstrap code after pairing.
+Create a one-time, revocable invite on the server:
+
+```bash
+npm run admin -- invite create --label "first beta user" --expires-days 30
+```
+
+The command prints the invite code once and Diya Cloud retains only its hash. Send that code privately to the person, then have them enter it under **Cloud** in Diya alongside your Cloud URL. `POST /v1/device-sessions` accepts the invite as `enrollmentCode` and returns a revocable desktop access token. The legacy `bootstrapCode` request field and `DIYA_BOOTSTRAP_CODE` remain available for an operator's own first pairing, not for a public cohort.
+
+```bash
+npm run admin -- invite list
+npm run admin -- invite revoke --id <invite-id>
+```
 
 ## APIs
 
 - `GET /health` — readiness without secrets.
-- `POST /v1/device-sessions` — pair a desktop with a bootstrap code.
+- `POST /v1/device-sessions` — enroll a desktop with a one-time invite or operator bootstrap code.
 - `GET /v1/me` and `GET /v1/usage` — device status and aggregate counters.
 - `DELETE /v1/me/device` — revokes the current desktop token; Diya calls this when Cloud is disconnected.
 - `POST /v1/screen-guides` — one hotkey-authorized image, structured visual guidance, no screen persistence.

@@ -9,7 +9,11 @@ export function newId() {
 }
 
 export function issueAccessToken() {
-  return `orb_live_${randomBytes(32).toString("base64url")}`;
+  return `diya_live_${randomBytes(32).toString("base64url")}`;
+}
+
+export function issueInviteCode() {
+  return `diya_invite_${randomBytes(18).toString("base64url")}`;
 }
 
 export function hash(value) {

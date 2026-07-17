@@ -37,11 +37,17 @@ docker compose -f compose.production.yml --env-file ../.env up -d --build
 docker compose -f compose.production.yml logs -f
 ```
 
-After DNS resolves, verify `https://cloud.yourdomain.com/health`. Pair one desktop from Diya’s settings gear with the temporary bootstrap code, then rotate `DIYA_BOOTSTRAP_CODE` and redeploy. Each paired desktop gets its own revocable opaque token.
+After DNS resolves, verify `https://cloud.yourdomain.com/health`. Use the operator bootstrap code only for your own first pairing, then issue each beta user a dedicated code:
+
+```bash
+docker compose -f compose.production.yml exec -T cloud node src/manage.mjs invite create --label "beta user" --expires-days 30
+```
+
+Share the printed code privately. It is one-time by default, stored only as a hash, and can be revoked with `invite revoke --id <invite-id>`. Each enrolled desktop gets its own revocable opaque token.
 
 ## 4. Operate safely
 
 - Back up the `diya-cloud-data` Docker volume and the encryption key together; the database is not useful without the key.
 - Never expose port 8787 publicly. Caddy is the public HTTPS edge.
-- Rotate the bootstrap code after onboarding and rotate the encryption key only through a planned data migration.
+- Keep the bootstrap code for operator recovery only; enroll people with individual invite codes and revoke an invite if it is exposed. Rotate the encryption key only through a planned data migration.
 - Use a managed database before running multiple Cloud replicas; this SQLite deployment is intentionally one-node.

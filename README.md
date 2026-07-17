@@ -21,7 +21,7 @@ Connector credentials are stored through Electron `safeStorage`, using the opera
 
 ## Diya Cloud: the startup path
 
-The `cloud` service is a separately deployable Node + SQLite API for the production product. Pair the desktop in the Connections gear using a server URL and one-time bootstrap code; it receives a revocable device token, then sends hotkey screen-guide requests to the server. Diya Cloud holds the OpenAI project key, encrypts Gmail/Notion tokens at rest, supports aggregate per-device usage, rate limits requests, and executes only desktop-approved actions. It never persists screen images, requests, responses, or action content. With a production HTTPS URL and provider credentials, the Gmail and Notion chips can open browser-based OAuth instead of asking the customer to paste tokens.
+The `cloud` service is a separately deployable Node + SQLite API for the production product. Pair the desktop in the Connections gear using a server URL and one-time invite code; it receives a revocable device token, then sends hotkey screen-guide requests to the server. Diya Cloud holds the OpenAI project key, encrypts Gmail/Notion tokens at rest, supports aggregate per-device usage, rate limits requests, and executes only desktop-approved actions. It never persists screen images, requests, responses, or action content. With a production HTTPS URL and provider credentials, the Gmail and Notion chips can open browser-based OAuth instead of asking the customer to paste tokens.
 
 Disconnecting **Cloud** in Diya revokes that desktop's server-side device token before clearing it locally.
 
@@ -51,7 +51,7 @@ npm run check
 npm run dist
 ```
 
-The portable artifact is written to `dist\Diya 0.8.0.exe`.
+The portable artifact is written to `dist\Diya 0.9.0.exe`.
 
 ## Submission material
 

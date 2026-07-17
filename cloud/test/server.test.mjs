@@ -4,6 +4,7 @@ import http from "node:http";
 import test from "node:test";
 import { DiyaDatabase } from "../src/database.mjs";
 import { createDiyaServer } from "../src/server.mjs";
+import { hash } from "../src/security.mjs";
 
 function listen(server) {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(`http://127.0.0.1:${server.address().port}`)));
@@ -46,6 +47,12 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     assert.equal((await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ bootstrapCode: "wrong" }) })).status, 401);
     const paired = await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ bootstrapCode: config.bootstrapCode, deviceName: "Test desktop" }) });
     assert.equal(paired.status, 201);
+    const inviteCode = "diya_invite_one-time-test-code";
+    database.createInvite({ label: "test cohort", codeHash: hash(inviteCode), maxUses: 1 });
+    const invited = await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ enrollmentCode: inviteCode, deviceName: "Invited desktop" }) });
+    assert.equal(invited.status, 201);
+    assert.equal(invited.body.enrollment.source, "invite");
+    assert.equal((await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ enrollmentCode: inviteCode }) })).status, 401);
     const token = paired.body.accessToken;
     const auth = { Authorization: `Bearer ${token}` };
     const connected = await request(cloudUrl, "/v1/connectors/notion", { method: "PUT", headers: auth, body: JSON.stringify({ accessToken: "secret-notion-token", metadata: { parentPageId: "page-123" } }) });

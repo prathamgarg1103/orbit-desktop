@@ -49,8 +49,19 @@ export class DiyaDatabase {
         expires_at INTEGER NOT NULL,
         created_at TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS invites (
+        id TEXT PRIMARY KEY,
+        label TEXT NOT NULL,
+        code_hash TEXT NOT NULL UNIQUE,
+        max_uses INTEGER NOT NULL,
+        uses INTEGER NOT NULL DEFAULT 0,
+        expires_at TEXT,
+        created_at TEXT NOT NULL,
+        revoked_at TEXT
+      );
       CREATE INDEX IF NOT EXISTS usage_events_by_device_created ON usage_events(device_id, created_at DESC);
       CREATE INDEX IF NOT EXISTS oauth_states_by_expiry ON oauth_states(expires_at);
+      CREATE INDEX IF NOT EXISTS invites_by_created ON invites(created_at DESC);
     `);
   }
 
@@ -114,6 +125,46 @@ export class DiyaDatabase {
 
   consumeOAuthState(nonce) {
     return this.db.prepare("DELETE FROM oauth_states WHERE nonce = ? RETURNING nonce, device_id AS deviceId, provider, encrypted_verifier AS encryptedVerifier, expires_at AS expiresAt").get(nonce);
+  }
+
+  createInvite({ label, codeHash, maxUses = 1, expiresAt = null }) {
+    const expiration = expiresAt ? new Date(expiresAt) : null;
+    if (expiration && Number.isNaN(expiration.getTime())) throw new Error("Invite expiration must be a valid date.");
+    const invite = {
+      id: newId(),
+      label: String(label || "early access").trim().slice(0, 120) || "early access",
+      codeHash: String(codeHash),
+      maxUses: Math.max(1, Math.min(1_000, Number.parseInt(maxUses, 10) || 1)),
+      expiresAt: expiration ? expiration.toISOString() : null,
+      createdAt: now()
+    };
+    this.db.prepare("INSERT INTO invites (id, label, code_hash, max_uses, uses, expires_at, created_at) VALUES (?, ?, ?, ?, 0, ?, ?)")
+      .run(invite.id, invite.label, invite.codeHash, invite.maxUses, invite.expiresAt, invite.createdAt);
+    return { id: invite.id, label: invite.label, maxUses: invite.maxUses, uses: 0, expiresAt: invite.expiresAt, createdAt: invite.createdAt, revokedAt: null };
+  }
+
+  consumeInvite(codeHash) {
+    const timestamp = now();
+    return this.db.prepare(`
+      UPDATE invites
+      SET uses = uses + 1
+      WHERE code_hash = ?
+        AND revoked_at IS NULL
+        AND uses < max_uses
+        AND (expires_at IS NULL OR expires_at > ?)
+      RETURNING id, label, max_uses AS maxUses, uses, expires_at AS expiresAt, created_at AS createdAt
+    `).get(String(codeHash), timestamp) || null;
+  }
+
+  listInvites() {
+    return this.db.prepare(`
+      SELECT id, label, max_uses AS maxUses, uses, expires_at AS expiresAt, created_at AS createdAt, revoked_at AS revokedAt
+      FROM invites ORDER BY created_at DESC
+    `).all();
+  }
+
+  revokeInvite(id) {
+    return this.db.prepare("UPDATE invites SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL").run(now(), String(id)).changes > 0;
   }
 
   connectorStatus(deviceId) {

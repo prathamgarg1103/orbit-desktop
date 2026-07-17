@@ -146,7 +146,7 @@ function openConnectorForm(provider, connected) {
   notionParent.value = "";
   const name = provider === "cloud" ? "Diya Cloud" : provider === "openai" ? "OpenAI" : provider === "notion" ? "Notion" : "Gmail";
   connectorTitle.firstChild.textContent = `${connected ? "Manage" : "Connect"} ${name}`;
-  connectorToken.placeholder = provider === "cloud" ? "pairing code" : provider === "openai" ? "sk-..." : "access token";
+  connectorToken.placeholder = provider === "cloud" ? "invite or pairing code" : provider === "openai" ? "sk-..." : "access token";
   if (provider === "notion" && cloudConnected && connected) connectorToken.placeholder = "leave blank to keep Cloud OAuth token";
   cloudUrlRow.hidden = provider !== "cloud";
   notionParentRow.hidden = provider !== "notion";

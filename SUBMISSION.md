@@ -21,7 +21,7 @@ Diya is an original name, visual system, and implementation inspired by the scre
 
 ## Judge testing notes
 
-1. Run `npm install` and `npm start` in this directory, or use `dist\Diya 0.8.0.exe` after building.
+1. Run `npm install` and `npm start` in this directory, or use `dist\Diya 0.9.0.exe` after building.
 2. Place another application on screen and press `Ctrl` + `Shift` + `Space`.
 3. Move the pointer over controls with only Diya's second cursor visible. Press the hotkey again to ask a Talk question, then choose **Guide me**.
 4. Press `Ctrl` + `Shift` + `G` to advance the guide. Press `Esc` to close it and clear the active session.
