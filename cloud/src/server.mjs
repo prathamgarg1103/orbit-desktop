@@ -1,9 +1,10 @@
 import http from "node:http";
 import { executeApprovedAction } from "./agent-actions.mjs";
 import { HttpError, asHttpError } from "./errors.mjs";
+import { launchPage, privacyPage, PUBLIC_PAGE_CSP } from "./landing.mjs";
 import { activeConnection, completeOAuth, oauthErrorPage, startOAuth } from "./oauth.mjs";
 import { createScreenGuide } from "./screen-guide.mjs";
-import { hash, issueAccessToken, safeEqual, seal } from "./security.mjs";
+import { hash, issueAccessToken, keyedHash, safeEqual, seal } from "./security.mjs";
 
 const MAX_JSON_BYTES = 14 * 1024 * 1024;
 const PROVIDERS = new Set(["gmail", "notion"]);
@@ -21,6 +22,18 @@ function sendJson(response, status, body) {
 
 function sendHtml(response, status, html) {
   response.writeHead(status, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'", "Referrer-Policy": "no-referrer", "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY" });
+  response.end(html);
+}
+
+function sendPublicHtml(response, status, html) {
+  response.writeHead(status, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store",
+    "Content-Security-Policy": PUBLIC_PAGE_CSP,
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY"
+  });
   response.end(html);
 }
 
@@ -42,6 +55,14 @@ function stringValue(value, label, maximum) {
   if (!text) throw new HttpError(400, `${label} is required.`, "invalid_request");
   if (text.length > maximum) throw new HttpError(400, `${label} is too long.`, "invalid_request");
   return text;
+}
+
+function normalizedEmail(value) {
+  const email = String(value || "").trim().toLowerCase();
+  if (email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new HttpError(400, "Enter a valid email address.", "invalid_email");
+  }
+  return email;
 }
 
 function checkOrigin(request, config) {
@@ -76,13 +97,43 @@ function createRateLimiter(config) {
   };
 }
 
+function createPublicRateLimiter(config) {
+  const entries = new Map();
+  const limit = config.waitlistRequestLimit || 5;
+  const windowMs = config.waitlistWindowMs || 15 * 60 * 1000;
+  return (request) => {
+    if (entries.size > 10_000) entries.clear();
+    const forwardedFor = String(request.headers["x-forwarded-for"] || "");
+    const key = (forwardedFor.split(",")[0] || request.socket.remoteAddress || "unknown").trim().slice(0, 200);
+    const now = Date.now();
+    const entry = entries.get(key) || { startedAt: now, count: 0 };
+    if (now - entry.startedAt >= windowMs) { entry.startedAt = now; entry.count = 0; }
+    entry.count += 1;
+    entries.set(key, entry);
+    if (entry.count > limit) throw new HttpError(429, "Please wait a few minutes before trying again.", "rate_limited");
+  };
+}
+
 export function createDiyaServer({ config, database }) {
   const limit = createRateLimiter(config);
+  const limitPublic = createPublicRateLimiter(config);
   return http.createServer(async (request, response) => {
     try {
-      checkOrigin(request, config);
       const url = new URL(request.url || "/", "http://diya.local");
       const path = url.pathname;
+      if (request.method === "GET" && path === "/") return sendPublicHtml(response, 200, launchPage());
+      if (request.method === "GET" && path === "/privacy") return sendPublicHtml(response, 200, privacyPage());
+      if (request.method === "POST" && path === "/v1/waitlist") {
+        limitPublic(request);
+        const email = normalizedEmail((await readJson(request)).email);
+        database.upsertWaitlistEntry({
+          emailHash: keyedHash(email, config.encryptionKey),
+          encryptedEmail: seal(email, config.encryptionKey),
+          source: "launch-page"
+        });
+        return sendJson(response, 202, { accepted: true });
+      }
+      checkOrigin(request, config);
       const callbackMatch = /^\/oauth\/(gmail|notion)\/callback$/.exec(path);
       if (callbackMatch && request.method === "GET") {
         if (url.searchParams.get("error")) return sendHtml(response, 400, oauthErrorPage(url.searchParams.get("error_description") || url.searchParams.get("error")));

@@ -59,9 +59,19 @@ export class DiyaDatabase {
         created_at TEXT NOT NULL,
         revoked_at TEXT
       );
+      CREATE TABLE IF NOT EXISTS waitlist_entries (
+        id TEXT PRIMARY KEY,
+        email_hash TEXT NOT NULL UNIQUE,
+        encrypted_email TEXT NOT NULL,
+        source TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'requested',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
       CREATE INDEX IF NOT EXISTS usage_events_by_device_created ON usage_events(device_id, created_at DESC);
       CREATE INDEX IF NOT EXISTS oauth_states_by_expiry ON oauth_states(expires_at);
       CREATE INDEX IF NOT EXISTS invites_by_created ON invites(created_at DESC);
+      CREATE INDEX IF NOT EXISTS waitlist_entries_by_status_created ON waitlist_entries(status, created_at DESC);
     `);
   }
 
@@ -165,6 +175,30 @@ export class DiyaDatabase {
 
   revokeInvite(id) {
     return this.db.prepare("UPDATE invites SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL").run(now(), String(id)).changes > 0;
+  }
+
+  upsertWaitlistEntry({ emailHash, encryptedEmail, source = "launch-page" }) {
+    const timestamp = now();
+    return this.db.prepare(`
+      INSERT INTO waitlist_entries (id, email_hash, encrypted_email, source, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'requested', ?, ?)
+      ON CONFLICT(email_hash) DO UPDATE SET
+        encrypted_email = excluded.encrypted_email,
+        source = excluded.source,
+        updated_at = excluded.updated_at
+      RETURNING id, source, status, created_at AS createdAt, updated_at AS updatedAt
+    `).get(newId(), String(emailHash), String(encryptedEmail), String(source).slice(0, 60), timestamp, timestamp);
+  }
+
+  listWaitlistEntries(status = "") {
+    const filter = String(status || "").trim();
+    return filter
+      ? this.db.prepare("SELECT id, encrypted_email AS encryptedEmail, source, status, created_at AS createdAt, updated_at AS updatedAt FROM waitlist_entries WHERE status = ? ORDER BY created_at DESC").all(filter)
+      : this.db.prepare("SELECT id, encrypted_email AS encryptedEmail, source, status, created_at AS createdAt, updated_at AS updatedAt FROM waitlist_entries ORDER BY created_at DESC").all();
+  }
+
+  updateWaitlistStatus(id, status) {
+    return this.db.prepare("UPDATE waitlist_entries SET status = ?, updated_at = ? WHERE id = ?").run(String(status), now(), String(id)).changes > 0;
   }
 
   connectorStatus(deviceId) {

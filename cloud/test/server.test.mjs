@@ -4,7 +4,7 @@ import http from "node:http";
 import test from "node:test";
 import { DiyaDatabase } from "../src/database.mjs";
 import { createDiyaServer } from "../src/server.mjs";
-import { hash } from "../src/security.mjs";
+import { hash, unseal } from "../src/security.mjs";
 
 function listen(server) {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(`http://127.0.0.1:${server.address().port}`)));
@@ -38,11 +38,30 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     model: "gpt-5.6",
     requestLimit: 30,
     requestWindowMs: 600_000,
+    waitlistRequestLimit: 4,
+    waitlistWindowMs: 600_000,
     allowedOrigins: new Set()
   };
   const cloud = createDiyaServer({ config, database });
   const cloudUrl = await listen(cloud);
   try {
+    const homepage = await fetch(cloudUrl);
+    assert.equal(homepage.status, 200);
+    assert.match(homepage.headers.get("content-security-policy"), /form-action 'self'/);
+    assert.match(await homepage.text(), /Your screen is the <em>prompt/);
+    const privacy = await fetch(`${cloudUrl}/privacy`);
+    assert.equal(privacy.status, 200);
+    assert.match(await privacy.text(), /Privacy at a glance/);
+    const beta = await request(cloudUrl, "/v1/waitlist", { method: "POST", body: JSON.stringify({ email: "Beta.User@example.com" }) });
+    assert.equal(beta.status, 202);
+    assert.equal(beta.body.accepted, true);
+    assert.equal((await request(cloudUrl, "/v1/waitlist", { method: "POST", body: JSON.stringify({ email: "beta.user@example.com" }) })).status, 202);
+    assert.equal((await request(cloudUrl, "/v1/waitlist", { method: "POST", body: JSON.stringify({ email: "not-an-email" }) })).status, 400);
+    assert.equal((await request(cloudUrl, "/v1/waitlist", { method: "POST", body: JSON.stringify({ email: "another@example.com" }) })).status, 202);
+    assert.equal((await request(cloudUrl, "/v1/waitlist", { method: "POST", body: JSON.stringify({ email: "blocked@example.com" }) })).status, 429);
+    const waitlist = database.listWaitlistEntries();
+    assert.equal(waitlist.length, 2);
+    assert.deepEqual(waitlist.map((entry) => unseal(entry.encryptedEmail, config.encryptionKey)).sort(), ["another@example.com", "beta.user@example.com"]);
     assert.equal((await request(cloudUrl, "/health")).body.ok, true);
     assert.equal((await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ bootstrapCode: "wrong" }) })).status, 401);
     const paired = await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ bootstrapCode: config.bootstrapCode, deviceName: "Test desktop" }) });

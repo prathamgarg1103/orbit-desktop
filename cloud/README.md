@@ -2,7 +2,7 @@
 
 Diya Cloud is the server-side half of the Diya startup foundation. It keeps the OpenAI project key and any future provider tokens out of the desktop process, pairs individual desktop installations with revocable opaque tokens, and persists only encrypted connector tokens plus minimal usage counters.
 
-It intentionally does not store screen images, questions, model answers, raw provider tokens, or email/Notion content. A screen image is accepted for a single `/v1/screen-guides` request, forwarded to the Responses API with `store: false`, and discarded from process memory after the request completes.
+It intentionally does not store screen images, questions, model answers, raw provider tokens, or Gmail/Notion content. A screen image is accepted for a single `/v1/screen-guides` request, forwarded to the Responses API with `store: false`, and discarded from process memory after the request completes. A visitor who deliberately requests early access has their email encrypted at rest; it is used only for beta follow-up.
 
 ## Run locally
 
@@ -31,7 +31,23 @@ npm run admin -- invite list
 npm run admin -- invite revoke --id <invite-id>
 ```
 
+## Launch page and beta waitlist
+
+The deployed Cloud URL also serves Diya's public launch page at `/` and a concise privacy page at `/privacy`. Its built-in form posts to `/v1/waitlist`; no third-party form service receives the email. Each request is rate limited, normalized, encrypted at rest, and keyed-hashed to prevent duplicate rows without exposing an email index.
+
+Only an operator with the Cloud encryption key can reveal the email through the local server CLI:
+
+```bash
+npm run admin -- waitlist list
+npm run admin -- waitlist set-status --id <entry-id> --status invited
+```
+
+Use a one-time desktop invite when you decide to onboard a person. The waitlist status is for your beta workflow; it does not automatically grant Cloud access.
+
 ## APIs
+
+- `GET /` and `GET /privacy` - public Diya launch and privacy pages.
+- `POST /v1/waitlist` - accepts a rate-limited, encrypted beta request.
 
 - `GET /health` — readiness without secrets.
 - `POST /v1/device-sessions` — enroll a desktop with a one-time invite or operator bootstrap code.

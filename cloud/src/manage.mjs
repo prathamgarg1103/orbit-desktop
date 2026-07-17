@@ -1,7 +1,7 @@
 import { pathToFileURL } from "node:url";
 import { loadConfig } from "./config.mjs";
 import { DiyaDatabase } from "./database.mjs";
-import { hash, issueInviteCode } from "./security.mjs";
+import { hash, issueInviteCode, unseal } from "./security.mjs";
 
 function option(args, name) {
   const index = args.indexOf(`--${name}`);
@@ -26,17 +26,19 @@ function commandHelp() {
     "Diya Cloud operator commands:",
     "  npm run admin -- invite create --label <name> [--uses 1] [--expires-days 30]",
     "  npm run admin -- invite list",
-    "  npm run admin -- invite revoke --id <invite-id>"
+    "  npm run admin -- invite revoke --id <invite-id>",
+    "  npm run admin -- waitlist list [--status requested]",
+    "  npm run admin -- waitlist set-status --id <entry-id> --status invited"
   ].join("\n");
 }
 
 export function runAdmin({ args = process.argv.slice(2), env = process.env, write = (value) => process.stdout.write(`${value}\n`) } = {}) {
   const [resource, action, ...options] = args;
-  if (resource !== "invite" || !action) throw new Error(commandHelp());
+  if (!new Set(["invite", "waitlist"]).has(resource) || !action) throw new Error(commandHelp());
   const config = loadConfig(env);
   const database = new DiyaDatabase(config.databasePath);
   try {
-    if (action === "create") {
+    if (resource === "invite" && action === "create") {
       const uses = integerOption(options, "uses", 1, 1, 1_000);
       const expiresDays = integerOption(options, "expires-days", 30, 1, 365);
       const code = issueInviteCode();
@@ -50,15 +52,34 @@ export function runAdmin({ args = process.argv.slice(2), env = process.env, writ
       write(JSON.stringify(result, null, 2));
       return result;
     }
-    if (action === "list") {
+    if (resource === "invite" && action === "list") {
       const result = { invites: database.listInvites() };
       write(JSON.stringify(result, null, 2));
       return result;
     }
-    if (action === "revoke") {
+    if (resource === "invite" && action === "revoke") {
       const id = option(options, "id");
       if (!id) throw new Error("invite revoke needs --id <invite-id>.");
       const result = { id, revoked: database.revokeInvite(id) };
+      write(JSON.stringify(result, null, 2));
+      return result;
+    }
+    if (resource === "waitlist" && action === "list") {
+      const status = option(options, "status") || "";
+      const waitlist = database.listWaitlistEntries(status).map(({ encryptedEmail, ...entry }) => ({
+        ...entry,
+        email: unseal(encryptedEmail, config.encryptionKey)
+      }));
+      const result = { waitlist };
+      write(JSON.stringify(result, null, 2));
+      return result;
+    }
+    if (resource === "waitlist" && action === "set-status") {
+      const id = option(options, "id");
+      const status = option(options, "status");
+      if (!id) throw new Error("waitlist set-status needs --id <entry-id>.");
+      if (!new Set(["requested", "invited", "declined"]).has(status)) throw new Error("waitlist status must be requested, invited, or declined.");
+      const result = { id, status, updated: database.updateWaitlistStatus(id, status) };
       write(JSON.stringify(result, null, 2));
       return result;
     }

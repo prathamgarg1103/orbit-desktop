@@ -37,13 +37,20 @@ docker compose -f compose.production.yml --env-file ../.env up -d --build
 docker compose -f compose.production.yml logs -f
 ```
 
-After DNS resolves, verify `https://cloud.yourdomain.com/health`. Use the operator bootstrap code only for your own first pairing, then issue each beta user a dedicated code:
+After DNS resolves, verify `https://cloud.yourdomain.com/health`. The same public URL serves Diya's launch page at `/`, its privacy summary at `/privacy`, and the built-in waitlist form at `/v1/waitlist`; no external form provider is required. Use the operator bootstrap code only for your own first pairing, then issue each beta user a dedicated code:
 
 ```bash
 docker compose -f compose.production.yml exec -T cloud node src/manage.mjs invite create --label "beta user" --expires-days 30
 ```
 
 Share the printed code privately. It is one-time by default, stored only as a hash, and can be revoked with `invite revoke --id <invite-id>`. Each enrolled desktop gets its own revocable opaque token.
+
+Review beta requests only from the server where the encryption key is available:
+
+```bash
+docker compose -f compose.production.yml exec -T cloud node src/manage.mjs waitlist list
+docker compose -f compose.production.yml exec -T cloud node src/manage.mjs waitlist set-status --id <entry-id> --status invited
+```
 
 ## 4. Operate safely
 

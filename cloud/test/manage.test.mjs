@@ -4,7 +4,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { DiyaDatabase } from "../src/database.mjs";
 import { runAdmin } from "../src/manage.mjs";
+import { keyedHash, seal } from "../src/security.mjs";
 
 function adminEnvironment(databasePath) {
   return {
@@ -31,6 +33,20 @@ test("issues, lists, and revokes a one-time invite without retaining its raw cod
     const revoked = runAdmin({ args: ["invite", "revoke", "--id", created.invite.id], env: environment, write: () => {} });
     assert.equal(revoked.revoked, true);
     assert.equal(runAdmin({ args: ["invite", "list"], env: environment, write: () => {} }).invites[0].revokedAt !== null, true);
+
+    const database = new DiyaDatabase(environment.DIYA_DATABASE_PATH);
+    const key = Buffer.from(environment.DIYA_ENCRYPTION_KEY, "base64");
+    database.upsertWaitlistEntry({
+      emailHash: keyedHash("hello@example.com", key),
+      encryptedEmail: seal("hello@example.com", key),
+      source: "launch-page"
+    });
+    database.close();
+    const waitlist = runAdmin({ args: ["waitlist", "list"], env: environment, write: () => {} });
+    assert.equal(waitlist.waitlist[0].email, "hello@example.com");
+    const updated = runAdmin({ args: ["waitlist", "set-status", "--id", waitlist.waitlist[0].id, "--status", "invited"], env: environment, write: () => {} });
+    assert.equal(updated.updated, true);
+    assert.equal(runAdmin({ args: ["waitlist", "list", "--status", "invited"], env: environment, write: () => {} }).waitlist.length, 1);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }

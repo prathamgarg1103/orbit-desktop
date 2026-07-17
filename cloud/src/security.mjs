@@ -20,6 +20,10 @@ export function hash(value) {
   return createHash("sha256").update(String(value)).digest("hex");
 }
 
+export function keyedHash(value, key) {
+  return createHmac("sha256", key).update(String(value)).digest("hex");
+}
+
 export function safeEqual(left, right) {
   const a = Buffer.from(String(left));
   const b = Buffer.from(String(right));
