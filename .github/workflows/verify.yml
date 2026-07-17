@@ -1,4 +1,4 @@
-name: Verify Orbit
+name: Verify Diya
 
 on:
   push:
@@ -17,7 +17,11 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloud/package-lock.json
       - run: npm ci
+      - run: npm ci --prefix cloud
       - run: npm run check
 
   cloud-image:
@@ -25,4 +29,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build --tag orbit-cloud:verify cloud
+      - run: docker build --tag diya-cloud:verify cloud
