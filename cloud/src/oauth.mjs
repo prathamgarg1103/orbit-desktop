@@ -64,12 +64,12 @@ async function exchangeNotion(code, settings) {
   return { accessToken: payload.access_token, refreshToken: "", expiresIn: 0 };
 }
 
-export function startOAuth({ provider, deviceId, config, database }) {
+export async function startOAuth({ provider, deviceId, config, database }) {
   const settings = providerConfig(config, provider);
   const nonce = newId();
   const verifier = provider === "gmail" ? codeVerifier() : "notion-oauth";
   const expiresAt = Date.now() + config.oauthStateTtlMs;
-  database.createOAuthState({ nonce, deviceId, provider, encryptedVerifier: seal(verifier, config.encryptionKey), expiresAt });
+  await database.createOAuthState({ nonce, deviceId, provider, encryptedVerifier: seal(verifier, config.encryptionKey), expiresAt });
   const state = signState({ provider, deviceId, nonce, expiresAt }, config.encryptionKey);
   const url = new URL(settings.authorizeUrl);
   if (provider === "gmail") {
@@ -101,19 +101,19 @@ export async function completeOAuth({ provider, state, code, config, database })
   let signed;
   try { signed = verifyState(state, config.encryptionKey); } catch (error) { throw new HttpError(400, error.message, "invalid_oauth_state"); }
   if (signed.provider !== provider) throw new HttpError(400, "OAuth provider mismatch.", "invalid_oauth_state");
-  const pending = database.consumeOAuthState(signed.nonce);
+  const pending = await database.consumeOAuthState(signed.nonce);
   if (!pending || pending.provider !== provider || pending.deviceId !== signed.deviceId || pending.expiresAt < Date.now()) {
     throw new HttpError(400, "OAuth state has expired. Start the connection again.", "invalid_oauth_state");
   }
   const settings = providerConfig(config, provider);
   const verifier = unseal(pending.encryptedVerifier, config.encryptionKey);
   const token = provider === "gmail" ? await exchangeGoogle(code, verifier, settings) : await exchangeNotion(code, settings);
-  const existing = database.getConnection(pending.deviceId, provider);
+  const existing = await database.getConnection(pending.deviceId, provider);
   const metadata = readMetadata(existing);
   if (provider === "gmail" && token.expiresIn) metadata.tokenExpiresAt = new Date(Date.now() + token.expiresIn * 1000).toISOString();
   metadata.connectionSource = "oauth";
   const refreshToken = token.refreshToken || (existing?.refreshToken ? unseal(existing.refreshToken, config.encryptionKey) : "");
-  database.putConnection(pending.deviceId, provider, {
+  await database.putConnection(pending.deviceId, provider, {
     accessToken: seal(token.accessToken, config.encryptionKey),
     refreshToken: refreshToken ? seal(refreshToken, config.encryptionKey) : "",
     metadata
@@ -122,7 +122,7 @@ export async function completeOAuth({ provider, state, code, config, database })
 }
 
 export async function activeConnection({ provider, deviceId, config, database }) {
-  const stored = database.getConnection(deviceId, provider);
+  const stored = await database.getConnection(deviceId, provider);
   if (!stored) throw new HttpError(409, `Connect ${provider === "gmail" ? "Gmail" : "Notion"} in Diya Cloud before approving this action.`, "connector_required");
   const metadata = readMetadata(stored);
   let accessToken = unseal(stored.accessToken, config.encryptionKey);
@@ -136,7 +136,7 @@ export async function activeConnection({ provider, deviceId, config, database })
     if (!response.ok || !payload.access_token) throw new HttpError(502, payload.error_description || payload.error || "Google could not refresh the Gmail connection.", "oauth_refresh_failed");
     accessToken = payload.access_token;
     metadata.tokenExpiresAt = new Date(Date.now() + (Number(payload.expires_in) || 3600) * 1000).toISOString();
-    database.putConnection(deviceId, provider, { accessToken: seal(accessToken, config.encryptionKey), refreshToken: seal(refreshToken, config.encryptionKey), metadata });
+    await database.putConnection(deviceId, provider, { accessToken: seal(accessToken, config.encryptionKey), refreshToken: seal(refreshToken, config.encryptionKey), metadata });
   }
   return { accessToken, refreshToken, metadata };
 }

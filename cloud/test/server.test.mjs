@@ -65,6 +65,7 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     assert.equal(waitlist.length, 2);
     assert.deepEqual(waitlist.map((entry) => unseal(entry.encryptedEmail, config.encryptionKey)).sort(), ["another@example.com", "beta.user@example.com"]);
     assert.equal((await request(cloudUrl, "/health")).body.ok, true);
+    assert.equal((await request(cloudUrl, "/api/diya?diyaPath=health")).body.ok, true);
     assert.equal((await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ bootstrapCode: "wrong" }) })).status, 401);
     const paired = await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ bootstrapCode: config.bootstrapCode, deviceName: "Test desktop" }) });
     assert.equal(paired.status, 201);

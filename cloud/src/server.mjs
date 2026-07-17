@@ -77,6 +77,19 @@ function checkOrigin(request, config) {
   if (origin && !config.allowedOrigins.has(origin)) throw new HttpError(403, "This origin is not allowed to call Diya Cloud.", "origin_not_allowed");
 }
 
+function requestUrl(request) {
+  const url = new URL(request.url || "/", "http://diya.local");
+  // Vercel rewrites public paths to one Node function. The marker is removed
+  // before normal routing so the desktop and OAuth callback keep their public
+  // URLs unchanged.
+  const rewrittenPath = url.searchParams.get("diyaPath");
+  if (rewrittenPath !== null) {
+    url.pathname = `/${rewrittenPath.replace(/^\/+/, "")}`;
+    url.searchParams.delete("diyaPath");
+  }
+  return url;
+}
+
 function bearerToken(request) {
   const header = String(request.headers.authorization || "");
   const match = /^Bearer\s+(.+)$/i.exec(header);
@@ -84,11 +97,11 @@ function bearerToken(request) {
   return match[1];
 }
 
-function authenticate(request, database) {
+async function authenticate(request, database) {
   const token = bearerToken(request);
-  const device = database.findDeviceByTokenHash(hash(token));
+  const device = await database.findDeviceByTokenHash(hash(token));
   if (!device || device.revokedAt) throw new HttpError(401, "This desktop access token is not valid.", "invalid_token");
-  database.touchDevice(device.id);
+  await database.touchDevice(device.id);
   return device;
 }
 
@@ -133,10 +146,10 @@ function quotaLimits(config) {
   };
 }
 
-function quotaUsage(database, deviceId, config, periodStart = billingPeriod()) {
+async function quotaUsage(database, deviceId, config, periodStart = billingPeriod()) {
   const limits = quotaLimits(config);
-  const screenGuides = database.usageCountSince(deviceId, "screen_guide", periodStart);
-  const approvedActions = database.usageCountSince(deviceId, "approved_action", periodStart);
+  const screenGuides = await database.usageCountSince(deviceId, "screen_guide", periodStart);
+  const approvedActions = await database.usageCountSince(deviceId, "approved_action", periodStart);
   return {
     periodStart,
     screenGuides: { used: screenGuides, limit: limits.screenGuide, remaining: Math.max(0, limits.screenGuide - screenGuides) },
@@ -144,11 +157,11 @@ function quotaUsage(database, deviceId, config, periodStart = billingPeriod()) {
   };
 }
 
-function reserveQuota(database, deviceId, kind, config) {
+async function reserveQuota(database, deviceId, kind, config) {
   const periodStart = billingPeriod();
   const limits = quotaLimits(config);
   const limit = kind === "screen_guide" ? limits.screenGuide : limits.approvedAction;
-  const reservation = database.reserveMonthlyUsage({ deviceId, kind, limit, periodStart, model: kind === "screen_guide" ? config.model : null });
+  const reservation = await database.reserveMonthlyUsage({ deviceId, kind, limit, periodStart, model: kind === "screen_guide" ? config.model : null });
   if (!reservation) {
     const label = kind === "screen_guide" ? "screen guidance" : "approved agent actions";
     throw new HttpError(429, `This device has used its monthly ${label} allowance. It resets at the start of the next UTC month.`, "monthly_quota_reached");
@@ -156,19 +169,19 @@ function reserveQuota(database, deviceId, kind, config) {
   return reservation;
 }
 
-export function createDiyaServer({ config, database }) {
+export function createDiyaHandler({ config, database }) {
   const limit = createRateLimiter(config);
   const limitPublic = createPublicRateLimiter(config);
-  return http.createServer(async (request, response) => {
+  return async (request, response) => {
     try {
-      const url = new URL(request.url || "/", "http://diya.local");
+      const url = requestUrl(request);
       const path = url.pathname;
       if (request.method === "GET" && path === "/") return sendPublicHtml(response, 200, launchPage());
       if (request.method === "GET" && path === "/privacy") return sendPublicHtml(response, 200, privacyPage());
       if (request.method === "POST" && path === "/v1/waitlist") {
         limitPublic(request);
         const email = normalizedEmail((await readJson(request)).email);
-        database.upsertWaitlistEntry({
+        await database.upsertWaitlistEntry({
           emailHash: keyedHash(email, config.encryptionKey),
           encryptedEmail: seal(email, config.encryptionKey),
           source: "launch-page"
@@ -194,31 +207,31 @@ export function createDiyaServer({ config, database }) {
       if (request.method === "POST" && path === "/v1/device-sessions") {
         const body = await readJson(request);
         const code = stringValue(body.enrollmentCode || body.inviteCode || body.bootstrapCode, "enrollmentCode", 500);
-        const invited = safeEqual(code, config.bootstrapCode) ? null : database.consumeInvite(hash(code));
+        const invited = safeEqual(code, config.bootstrapCode) ? null : await database.consumeInvite(hash(code));
         if (!safeEqual(code, config.bootstrapCode) && !invited) throw new HttpError(401, "The enrollment code is not valid.", "invalid_enrollment_code");
         const accessToken = issueAccessToken();
-        const device = database.createDevice({ name: String(body.deviceName || "Diya desktop").slice(0, 100), tokenHash: hash(accessToken), enrollmentInviteId: invited?.id || null });
+        const device = await database.createDevice({ name: String(body.deviceName || "Diya desktop").slice(0, 100), tokenHash: hash(accessToken), enrollmentInviteId: invited?.id || null });
         return sendJson(response, 201, { accessToken, device, enrollment: invited ? { source: "invite", label: invited.label } : { source: "bootstrap" } });
       }
       if (request.method === "GET" && path === "/v1/me") {
-        const device = authenticate(request, database);
-        return sendJson(response, 200, { device: { id: device.id, name: device.name, createdAt: device.createdAt }, connectors: database.connectorStatus(device.id) });
+        const device = await authenticate(request, database);
+        return sendJson(response, 200, { device: { id: device.id, name: device.name, createdAt: device.createdAt }, connectors: await database.connectorStatus(device.id) });
       }
       if (request.method === "DELETE" && path === "/v1/me/device") {
-        const device = authenticate(request, database);
-        database.revokeDevice(device.id);
+        const device = await authenticate(request, database);
+        await database.revokeDevice(device.id);
         return sendJson(response, 200, { revoked: true });
       }
       if (request.method === "GET" && path === "/v1/usage") {
-        const device = authenticate(request, database);
-        return sendJson(response, 200, { usage: database.usageSummary(device.id), quota: quotaUsage(database, device.id, config) });
+        const device = await authenticate(request, database);
+        return sendJson(response, 200, { usage: await database.usageSummary(device.id), quota: await quotaUsage(database, device.id, config) });
       }
       if (request.method === "POST" && path === "/v1/feedback") {
-        const device = authenticate(request, database);
+        const device = await authenticate(request, database);
         limit(device.id);
         const body = await readJson(request);
         const message = stringValue(body.message, "feedback", 2_000);
-        const feedback = database.createFeedback({
+        const feedback = await database.createFeedback({
           deviceId: device.id,
           category: feedbackCategory(body.category),
           encryptedMessage: seal(message, config.encryptionKey)
@@ -227,70 +240,70 @@ export function createDiyaServer({ config, database }) {
       }
       const oauthStartMatch = /^\/v1\/oauth\/(gmail|notion)\/start$/.exec(path);
       if (oauthStartMatch && request.method === "POST") {
-        const device = authenticate(request, database);
+        const device = await authenticate(request, database);
         limit(device.id);
-        return sendJson(response, 200, startOAuth({ provider: oauthStartMatch[1], deviceId: device.id, config, database }));
+        return sendJson(response, 200, await startOAuth({ provider: oauthStartMatch[1], deviceId: device.id, config, database }));
       }
       if (request.method === "POST" && path === "/v1/screen-guides") {
-        const device = authenticate(request, database);
+        const device = await authenticate(request, database);
         limit(device.id);
         const body = await readJson(request);
         const requestText = stringValue(body.request, "request", 1_500);
         const mode = body.mode === "agent" ? "agent" : "coach";
-        const reservation = reserveQuota(database, device.id, "screen_guide", config);
+        const reservation = await reserveQuota(database, device.id, "screen_guide", config);
         let result;
         try {
           result = await createScreenGuide({ config, request: requestText, mode, screenImage: body.screenImage, focus: body.focus, deviceId: device.id });
         } catch (error) {
-          database.cancelUsageReservation(reservation.id);
+          await database.cancelUsageReservation(reservation.id);
           throw error;
         }
-        database.completeUsageReservation(reservation.id, { model: config.model, imageBytes: result.imageBytes });
+        await database.completeUsageReservation(reservation.id, { model: config.model, imageBytes: result.imageBytes });
         return sendJson(response, 200, { mode, demo: false, text: result.text, steps: result.steps });
       }
       const connectorMatch = /^\/v1\/connectors\/(gmail|notion)$/.exec(path);
       if (connectorMatch && request.method === "PUT") {
-        const device = authenticate(request, database);
+        const device = await authenticate(request, database);
         const provider = connectorMatch[1];
         const body = await readJson(request);
         const accessToken = stringValue(body.accessToken, "accessToken", 10_000);
         const refreshToken = body.refreshToken ? stringValue(body.refreshToken, "refreshToken", 10_000) : "";
         const metadata = body.metadata && typeof body.metadata === "object" ? body.metadata : {};
-        database.putConnection(device.id, provider, {
+        await database.putConnection(device.id, provider, {
           accessToken: seal(accessToken, config.encryptionKey),
           refreshToken: refreshToken ? seal(refreshToken, config.encryptionKey) : "",
           metadata
         });
-        return sendJson(response, 200, { connectors: database.connectorStatus(device.id) });
+        return sendJson(response, 200, { connectors: await database.connectorStatus(device.id) });
       }
       if (connectorMatch && request.method === "PATCH") {
-        const device = authenticate(request, database);
+        const device = await authenticate(request, database);
         const body = await readJson(request);
         const metadata = body.metadata && typeof body.metadata === "object" ? body.metadata : {};
-        if (!database.updateConnectionMetadata(device.id, connectorMatch[1], metadata)) throw new HttpError(409, "Connect this provider in the browser before saving its settings.", "connector_required");
-        return sendJson(response, 200, { connectors: database.connectorStatus(device.id) });
+        if (!await database.updateConnectionMetadata(device.id, connectorMatch[1], metadata)) throw new HttpError(409, "Connect this provider in the browser before saving its settings.", "connector_required");
+        return sendJson(response, 200, { connectors: await database.connectorStatus(device.id) });
       }
       if (connectorMatch && request.method === "DELETE") {
-        const device = authenticate(request, database);
-        database.deleteConnection(device.id, connectorMatch[1]);
-        return sendJson(response, 200, { connectors: database.connectorStatus(device.id) });
+        const device = await authenticate(request, database);
+        await database.deleteConnection(device.id, connectorMatch[1]);
+        return sendJson(response, 200, { connectors: await database.connectorStatus(device.id) });
       }
       if (request.method === "POST" && path === "/v1/actions/execute") {
-        const device = authenticate(request, database);
+        const device = await authenticate(request, database);
         limit(device.id);
         const body = await readJson(request);
         const action = body.action;
         const provider = action?.kind === "gmail_draft" ? "gmail" : action?.kind === "notion_create_page" ? "notion" : "";
         if (!PROVIDERS.has(provider)) throw new HttpError(400, "Diya does not support that approved action.", "unsupported_action");
-        const reservation = reserveQuota(database, device.id, "approved_action", config);
+        const reservation = await reserveQuota(database, device.id, "approved_action", config);
         let result;
         try {
           result = await executeApprovedAction({ action, connection: await activeConnection({ provider, deviceId: device.id, config, database }) });
         } catch (error) {
-          database.cancelUsageReservation(reservation.id);
+          await database.cancelUsageReservation(reservation.id);
           throw error;
         }
-        database.completeUsageReservation(reservation.id);
+        await database.completeUsageReservation(reservation.id);
         return sendJson(response, 200, result);
       }
       throw new HttpError(404, "Diya Cloud could not find that endpoint.", "not_found");
@@ -298,5 +311,9 @@ export function createDiyaServer({ config, database }) {
       const safe = asHttpError(error);
       return sendJson(response, safe.status, { error: { code: safe.code, message: safe.message } });
     }
-  });
+  };
+}
+
+export function createDiyaServer(options) {
+  return http.createServer(createDiyaHandler(options));
 }

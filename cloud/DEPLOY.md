@@ -1,6 +1,29 @@
 # Deploy Diya Cloud
 
-Diya Cloud can run on a small Linux VM with Docker. The provided production compose file places it behind Caddy, which obtains and renews HTTPS certificates automatically after your DNS record points at the VM.
+Diya Cloud supports a managed **Vercel + Supabase** deployment for the public beta and a self-managed Docker deployment for a single-node VM. The managed path is the recommended default.
+
+## Vercel + Supabase (recommended)
+
+1. Choose a dedicated Supabase project and apply the repository migration:
+
+   ```bash
+   npx supabase link --project-ref <project-ref>
+   npx supabase db push
+   ```
+
+2. Import the GitHub repository into Vercel and set its **Root Directory** to `cloud`. Vercel uses [`cloud/vercel.json`](vercel.json) to send `/`, `/privacy`, `/health`, OAuth callbacks, and every `/v1/*` request to the Node function.
+3. In Vercel's Production environment variables, set:
+   - `DIYA_ENCRYPTION_KEY` — fresh 32-byte base64 value.
+   - `DIYA_BOOTSTRAP_CODE` — long temporary code for your own first device only.
+   - `OPENAI_API_KEY` — server-side OpenAI project key.
+   - `DIYA_DATABASE_URL` — Supabase **Transaction pooler** URL, including `?sslmode=require`.
+   - `DIYA_PUBLIC_URL` and `DIYA_DOMAIN` — the Vercel production URL hostname, or your custom HTTPS domain.
+   - `DIYA_MONTHLY_SCREEN_GUIDE_LIMIT` and `DIYA_MONTHLY_APPROVED_ACTION_LIMIT` — per-device UTC-month spend caps.
+4. Deploy to production and verify `/health`, `/`, `/privacy`, and a one-time desktop pairing. Add Google and Notion provider values only after their redirect URLs are registered.
+
+The Cloud API never uses a Supabase browser key or service-role key. It connects only from the Vercel Node function through the password-bearing database URL; keep this value server-only. The schema enables RLS and revokes browser Data API access.
+
+## Docker VM (self-managed alternative)
 
 ## 1. Prepare the server
 

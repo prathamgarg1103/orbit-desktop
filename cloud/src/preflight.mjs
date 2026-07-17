@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 import { loadConfig } from "./config.mjs";
-import { DiyaDatabase } from "./database.mjs";
+import { openDiyaDatabase } from "./open-database.mjs";
 
 function domainFrom(env) {
   return String(env.DIYA_DOMAIN || env.ORBIT_DOMAIN || "").trim().toLowerCase();
@@ -10,7 +10,7 @@ function check(name, passed, detail, required = true) {
   return { name, passed: Boolean(passed), required, detail };
 }
 
-export function inspectDeployment({ env = process.env, Database = DiyaDatabase } = {}) {
+export async function inspectDeployment({ env = process.env, openDatabase = openDiyaDatabase } = {}) {
   let config;
   try {
     config = loadConfig(env);
@@ -27,9 +27,9 @@ export function inspectDeployment({ env = process.env, Database = DiyaDatabase }
   const publicHostname = config.publicUrl ? new URL(config.publicUrl).hostname.toLowerCase() : "";
   let databaseCheck;
   try {
-    const database = new Database(config.databasePath);
-    database.close();
-    databaseCheck = check("database migration", true, "The database path is writable and all current migrations completed.");
+    const database = await openDatabase(config);
+    await database.close();
+    databaseCheck = check("database migration", true, config.databaseUrl ? "Supabase Postgres is reachable and the Diya schema is available." : "The local SQLite database is writable and all current migrations completed.");
   } catch (error) {
     databaseCheck = check("database migration", false, `Diya Cloud could not initialize its database: ${error.message}`);
   }
@@ -60,7 +60,7 @@ export function inspectDeployment({ env = process.env, Database = DiyaDatabase }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const result = inspectDeployment();
+  const result = await inspectDeployment();
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   if (!result.ready) process.exitCode = 1;
 }

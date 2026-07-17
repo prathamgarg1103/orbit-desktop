@@ -17,23 +17,23 @@ function adminEnvironment(databasePath) {
   };
 }
 
-test("issues, lists, revokes, and safely converts waitlist requests into one-time invites", () => {
+test("issues, lists, revokes, and safely converts waitlist requests into one-time invites", async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "diya-cloud-admin-"));
   const environment = adminEnvironment(path.join(directory, "cloud.sqlite"));
   try {
-    const created = runAdmin({
+    const created = await runAdmin({
       args: ["invite", "create", "--label", "first beta user", "--uses", "1", "--expires-days", "7"],
       env: environment,
       write: () => {}
     });
     assert.match(created.code, /^diya_invite_/);
     assert.equal(created.invite.label, "first beta user");
-    const listed = runAdmin({ args: ["invite", "list"], env: environment, write: () => {} });
+    const listed = await runAdmin({ args: ["invite", "list"], env: environment, write: () => {} });
     assert.equal(listed.invites.length, 1);
     assert.equal(Object.hasOwn(listed.invites[0], "code"), false);
-    const revoked = runAdmin({ args: ["invite", "revoke", "--id", created.invite.id], env: environment, write: () => {} });
+    const revoked = await runAdmin({ args: ["invite", "revoke", "--id", created.invite.id], env: environment, write: () => {} });
     assert.equal(revoked.revoked, true);
-    assert.equal(runAdmin({ args: ["invite", "list"], env: environment, write: () => {} }).invites[0].revokedAt !== null, true);
+    assert.equal((await runAdmin({ args: ["invite", "list"], env: environment, write: () => {} })).invites[0].revokedAt !== null, true);
 
     const database = new DiyaDatabase(environment.DIYA_DATABASE_PATH);
     const key = Buffer.from(environment.DIYA_ENCRYPTION_KEY, "base64");
@@ -48,18 +48,18 @@ test("issues, lists, revokes, and safely converts waitlist requests into one-tim
       source: "launch-page"
     });
     database.close();
-    const waitlist = runAdmin({ args: ["waitlist", "list"], env: environment, write: () => {} }).waitlist;
+    const waitlist = (await runAdmin({ args: ["waitlist", "list"], env: environment, write: () => {} })).waitlist;
     const hello = waitlist.find((entry) => entry.email === "hello@example.com");
     const declined = waitlist.find((entry) => entry.email === "decline@example.com");
-    const markedDeclined = runAdmin({ args: ["waitlist", "set-status", "--id", declined.id, "--status", "declined"], env: environment, write: () => {} });
+    const markedDeclined = await runAdmin({ args: ["waitlist", "set-status", "--id", declined.id, "--status", "declined"], env: environment, write: () => {} });
     assert.equal(markedDeclined.updated, true);
-    assert.equal(runAdmin({ args: ["waitlist", "set-status", "--id", declined.id, "--status", "requested"], env: environment, write: () => {} }).updated, true);
-    const converted = runAdmin({ args: ["waitlist", "invite", "--id", hello.id, "--label", "first waitlist beta", "--expires-days", "14"], env: environment, write: () => {} });
+    assert.equal((await runAdmin({ args: ["waitlist", "set-status", "--id", declined.id, "--status", "requested"], env: environment, write: () => {} })).updated, true);
+    const converted = await runAdmin({ args: ["waitlist", "invite", "--id", hello.id, "--label", "first waitlist beta", "--expires-days", "14"], env: environment, write: () => {} });
     assert.equal(converted.email, "hello@example.com");
     assert.match(converted.code, /^diya_invite_/);
     assert.equal(converted.invite.maxUses, 1);
-    assert.equal(runAdmin({ args: ["waitlist", "list", "--status", "invited"], env: environment, write: () => {} }).waitlist.length, 1);
-    assert.throws(() => runAdmin({ args: ["waitlist", "invite", "--id", hello.id], env: environment, write: () => {} }), /already received an invite/);
+    assert.equal((await runAdmin({ args: ["waitlist", "list", "--status", "invited"], env: environment, write: () => {} })).waitlist.length, 1);
+    await assert.rejects(() => runAdmin({ args: ["waitlist", "invite", "--id", hello.id], env: environment, write: () => {} }), /already received an invite/);
     const feedbackDatabase = new DiyaDatabase(environment.DIYA_DATABASE_PATH);
     const feedbackDevice = feedbackDatabase.createDevice({ name: "Beta feedback desktop", tokenHash: "feedback-token-hash", enrollmentInviteId: converted.invite.id });
     feedbackDatabase.createFeedback({
@@ -75,12 +75,12 @@ test("issues, lists, revokes, and safely converts waitlist requests into one-tim
     assert.equal(feedbackDatabase.cancelUsageReservation(reservation.id), true);
     assert.ok(feedbackDatabase.reserveMonthlyUsage({ deviceId: feedbackDevice.id, kind: "test_quota", limit: 1, periodStart: "2000-01-01T00:00:00.000Z" })?.id);
     feedbackDatabase.close();
-    const feedback = runAdmin({ args: ["feedback", "list"], env: environment, write: () => {} }).feedback;
+    const feedback = (await runAdmin({ args: ["feedback", "list"], env: environment, write: () => {} })).feedback;
     assert.equal(feedback[0].message, "The hover label did not update in one app.");
     assert.equal(feedback[0].email, "hello@example.com");
-    assert.equal(runAdmin({ args: ["feedback", "set-status", "--id", feedback[0].id, "--status", "reviewed"], env: environment, write: () => {} }).updated, true);
-    assert.equal(runAdmin({ args: ["feedback", "list", "--status", "reviewed"], env: environment, write: () => {} }).feedback.length, 1);
-    const metrics = runAdmin({ args: ["metrics", "overview"], env: environment, write: () => {} }).metrics;
+    assert.equal((await runAdmin({ args: ["feedback", "set-status", "--id", feedback[0].id, "--status", "reviewed"], env: environment, write: () => {} })).updated, true);
+    assert.equal((await runAdmin({ args: ["feedback", "list", "--status", "reviewed"], env: environment, write: () => {} })).feedback.length, 1);
+    const metrics = (await runAdmin({ args: ["metrics", "overview"], env: environment, write: () => {} })).metrics;
     assert.deepEqual(metrics.waitlist, { total: 2, requested: 1, invited: 1, declined: 0 });
     assert.deepEqual(metrics.invites, { total: 2, pending: 1, consumed: 0, revoked: 1, expired: 0 });
     assert.deepEqual(metrics.devices, { total: 1, active: 1, activeLast7Days: 1, revoked: 0 });

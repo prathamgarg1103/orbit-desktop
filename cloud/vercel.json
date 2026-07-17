@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/diya?diyaPath=$1"
+    }
+  ],
+  "functions": {
+    "api/diya.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
+}

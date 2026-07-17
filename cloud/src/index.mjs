@@ -1,9 +1,9 @@
 import { loadConfig } from "./config.mjs";
-import { DiyaDatabase } from "./database.mjs";
+import { openDiyaDatabase } from "./open-database.mjs";
 import { createDiyaServer } from "./server.mjs";
 
 const config = loadConfig();
-const database = new DiyaDatabase(config.databasePath);
+const database = await openDiyaDatabase(config);
 const server = createDiyaServer({ config, database });
 
 server.listen(config.port, config.host, () => {
@@ -11,7 +11,7 @@ server.listen(config.port, config.host, () => {
 });
 
 function shutdown() {
-  server.close(() => { database.close(); process.exit(0); });
+  server.close(async () => { await database.close(); process.exit(0); });
 }
 
 process.once("SIGINT", shutdown);

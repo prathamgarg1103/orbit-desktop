@@ -14,7 +14,7 @@ Get-Content .env | ForEach-Object { if ($_ -match '^([^#][^=]+)=(.*)$') { Set-It
 npm start
 ```
 
-Node 22.13+ is required because the service uses the built-in SQLite driver. Put Diya Cloud behind HTTPS in production; the desktop's Electron main process communicates directly with it, so browser CORS is disabled unless you explicitly set `DIYA_ALLOWED_ORIGINS`. Existing `ORBIT_*` server variables remain accepted during a transition, but new deployments should use `DIYA_*`.
+Node 22.13+ is required. Local development uses the built-in SQLite driver; the hosted Vercel path uses Supabase Postgres through its transaction pooler. Put Diya Cloud behind HTTPS in production; the desktop's Electron main process communicates directly with it, so browser CORS is disabled unless you explicitly set `DIYA_ALLOWED_ORIGINS`. Existing `ORBIT_*` server variables remain accepted during a transition, but new deployments should use `DIYA_*`.
 
 Before inviting anyone, run the secret-safe deployment preflight after loading your real environment:
 
@@ -22,7 +22,19 @@ Before inviting anyone, run the secret-safe deployment preflight after loading y
 npm run preflight
 ```
 
-It validates the configuration contract, database migrations, server-side OpenAI key presence, public HTTPS URL/domain alignment, and optional OAuth configuration. It never prints secret values or contacts third-party services.
+It validates the configuration contract, database schema reachability, server-side OpenAI key presence, public HTTPS URL/domain alignment, and optional OAuth configuration. It never prints secret values or calls OpenAI, Gmail, or Notion.
+
+## Vercel + Supabase production
+
+This is the recommended public-beta path. The API remains a single Node.js Vercel Function and every public route is rewritten to it; Supabase provides persistent Postgres. The desktop still calls the same Cloud URL, so no renderer secret is introduced.
+
+1. Apply [`../supabase/migrations/20260717072316_diya_cloud_schema.sql`](../supabase/migrations/20260717072316_diya_cloud_schema.sql) to a dedicated Supabase project.
+2. Import this GitHub repository into Vercel with **Root Directory** set to `cloud`.
+3. Add these Vercel **Production** environment variables: `DIYA_ENCRYPTION_KEY`, `DIYA_BOOTSTRAP_CODE`, `OPENAI_API_KEY`, `DIYA_DATABASE_URL`, `DIYA_PUBLIC_URL`, and `DIYA_DOMAIN`. Add OAuth values only when those connections are ready.
+4. Set `DIYA_DATABASE_URL` to the Supabase **Transaction pooler** connection string with `?sslmode=require`. It stays server-only and must never use a `NEXT_PUBLIC_` prefix.
+5. Deploy, then pair the desktop using the Vercel production URL. Run `npm run preflight` from an operator machine with the same server variables before issuing invites.
+
+The migration enables RLS and removes `anon` and `authenticated` table access. Diya Cloud connects only with the server-side Postgres credential and continues to encrypt connector tokens, waitlist emails, and feedback before writing them.
 
 ## Beta allowances
 

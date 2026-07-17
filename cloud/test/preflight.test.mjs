@@ -17,10 +17,10 @@ function environment(databasePath) {
   };
 }
 
-test("reports a migration-validated production environment without exposing secrets", () => {
+test("reports a migration-validated production environment without exposing secrets", async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "diya-preflight-"));
   try {
-    const result = inspectDeployment({ env: environment(path.join(directory, "cloud.sqlite")) });
+    const result = await inspectDeployment({ env: environment(path.join(directory, "cloud.sqlite")) });
     assert.equal(result.ready, true);
     assert.equal(result.environment.publicUrl, "https://cloud.example.com");
     assert.equal(result.optional.gmailOAuth, "not configured");
@@ -31,13 +31,13 @@ test("reports a migration-validated production environment without exposing secr
   }
 });
 
-test("blocks launch when the model key or public domain contract is incomplete", () => {
+test("blocks launch when the model key or public domain contract is incomplete", async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "diya-preflight-invalid-"));
   try {
     const env = environment(path.join(directory, "cloud.sqlite"));
     delete env.OPENAI_API_KEY;
     env.DIYA_DOMAIN = "other.example.com";
-    const result = inspectDeployment({ env });
+    const result = await inspectDeployment({ env });
     assert.equal(result.ready, false);
     assert.equal(result.checks.find((item) => item.name === "OpenAI project key").passed, false);
     assert.equal(result.checks.find((item) => item.name === "domain alignment").passed, false);

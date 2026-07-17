@@ -12,5 +12,8 @@
     "admin": "node src/manage.mjs",
     "preflight": "node src/preflight.mjs",
     "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "postgres": "3.4.9"
   }
 }

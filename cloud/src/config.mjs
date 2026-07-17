@@ -29,6 +29,17 @@ function normalizedPublicUrl(value) {
   return url.origin;
 }
 
+function normalizedDatabaseUrl(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  let url;
+  try { url = new URL(text); } catch { throw new HttpError(500, "DIYA_DATABASE_URL must be a valid Postgres connection URL.", "configuration_error"); }
+  if (!new Set(["postgres:", "postgresql:"]).has(url.protocol) || !url.hostname) {
+    throw new HttpError(500, "DIYA_DATABASE_URL must use the postgres:// or postgresql:// protocol.", "configuration_error");
+  }
+  return text;
+}
+
 function oauthProvider(env, publicUrl, prefix, defaults) {
   const clientId = String(env[`${prefix}_OAUTH_CLIENT_ID`] || "").trim();
   const clientSecret = String(env[`${prefix}_OAUTH_CLIENT_SECRET`] || "").trim();
@@ -57,12 +68,14 @@ export function loadConfig(env = process.env) {
   }
 
   const databasePath = String(environmentValue(env, "DIYA_DATABASE_PATH") || "./data/diya-cloud.sqlite").trim();
+  const databaseUrl = normalizedDatabaseUrl(environmentValue(env, "DIYA_DATABASE_URL"));
   const model = String(environmentValue(env, "DIYA_MODEL") || "gpt-5.6").trim();
   const publicUrl = normalizedPublicUrl(environmentValue(env, "DIYA_PUBLIC_URL"));
   return Object.freeze({
     host: String(environmentValue(env, "DIYA_HOST") || "127.0.0.1").trim(),
     port: boundedInt(environmentValue(env, "DIYA_PORT"), 8787, 1, 65535),
     databasePath: databasePath === ":memory:" ? databasePath : path.resolve(process.cwd(), databasePath),
+    databaseUrl,
     encryptionKey,
     bootstrapCode,
     openaiApiKey: String(env.OPENAI_API_KEY || "").trim(),
