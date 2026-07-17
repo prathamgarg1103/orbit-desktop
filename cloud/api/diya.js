@@ -2,6 +2,8 @@ import { loadConfig } from "../src/config.mjs";
 import { openDiyaDatabase } from "../src/open-database.mjs";
 import { createDiyaHandler } from "../src/server.mjs";
 
+export const config = { maxDuration: 60 };
+
 let runtime;
 
 async function getRuntime() {
