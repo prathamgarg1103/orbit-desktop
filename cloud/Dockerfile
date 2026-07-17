@@ -13,4 +13,4 @@ USER node
 VOLUME ["/data"]
 EXPOSE 8787
 
-CMD ["node", "src/index.mjs"]
+CMD ["node", "src/local-server.mjs"]
