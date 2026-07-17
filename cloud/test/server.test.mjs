@@ -38,6 +38,8 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     model: "gpt-5.6",
     requestLimit: 30,
     requestWindowMs: 600_000,
+    screenGuideMonthlyLimit: 1,
+    approvedActionMonthlyLimit: 2,
     waitlistRequestLimit: 4,
     waitlistWindowMs: 600_000,
     allowedOrigins: new Set()
@@ -107,6 +109,14 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     assert.equal(typeof captured[0].text.format.schema, "object");
     const usage = await request(cloudUrl, "/v1/usage", { headers: auth });
     assert.equal(usage.body.usage.requests, 1);
+    assert.deepEqual(usage.body.quota.screenGuides, { used: 1, limit: 1, remaining: 0 });
+    assert.deepEqual(usage.body.quota.approvedActions, { used: 0, limit: 2, remaining: 2 });
+    assert.equal((await request(cloudUrl, "/v1/screen-guides", {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({ request: "Can I ask once more?", mode: "coach", focus: { x: 100, y: 100 }, screenImage: "data:image/jpeg;base64,aGVsbG8=" })
+    })).status, 429);
+    assert.equal(captured.length, 1);
     const revoked = await request(cloudUrl, "/v1/me/device", { method: "DELETE", headers: auth });
     assert.equal(revoked.body.revoked, true);
     assert.equal((await request(cloudUrl, "/v1/me", { headers: auth })).status, 401);

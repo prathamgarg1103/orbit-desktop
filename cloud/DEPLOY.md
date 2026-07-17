@@ -11,6 +11,7 @@ Diya Cloud can run on a small Linux VM with Docker. The provided production comp
    - `DIYA_BOOTSTRAP_CODE` — a long temporary code used only to pair a desktop.
    - `OPENAI_API_KEY` — the server-side OpenAI project key.
    - `DIYA_DOMAIN` and `DIYA_PUBLIC_URL` — your HTTPS domain.
+   - `DIYA_MONTHLY_SCREEN_GUIDE_LIMIT` and `DIYA_MONTHLY_APPROVED_ACTION_LIMIT` — the per-device UTC-month beta caps that protect your OpenAI and connector spend.
 4. Keep `.env` on the server. It is intentionally ignored by Git.
 
 ## 2. Register OAuth redirect URLs

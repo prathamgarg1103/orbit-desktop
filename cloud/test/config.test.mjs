@@ -12,12 +12,16 @@ test("prefers Diya configuration names and accepts legacy Orbit migration aliase
     DIYA_HOST: "0.0.0.0",
     DIYA_PORT: "9898",
     DIYA_DATABASE_PATH: ":memory:",
-    DIYA_MODEL: "gpt-5.6-mini"
+    DIYA_MODEL: "gpt-5.6-mini",
+    DIYA_MONTHLY_SCREEN_GUIDE_LIMIT: "75",
+    DIYA_MONTHLY_APPROVED_ACTION_LIMIT: "12"
   });
   assert.equal(diya.host, "0.0.0.0");
   assert.equal(diya.port, 9898);
   assert.equal(diya.databasePath, ":memory:");
   assert.equal(diya.model, "gpt-5.6-mini");
+  assert.equal(diya.screenGuideMonthlyLimit, 75);
+  assert.equal(diya.approvedActionMonthlyLimit, 12);
 
   const legacy = loadConfig({
     ORBIT_ENCRYPTION_KEY: key(),

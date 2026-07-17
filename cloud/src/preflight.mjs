@@ -17,7 +17,7 @@ export function inspectDeployment({ env = process.env, Database = DiyaDatabase }
   } catch (error) {
     return {
       ready: false,
-      environment: { publicUrl: null, domain: domainFrom(env) || null, model: null },
+      environment: { publicUrl: null, domain: domainFrom(env) || null, model: null, monthlyScreenGuideLimit: null, monthlyApprovedActionLimit: null },
       checks: [check("configuration", false, error.message)],
       optional: { gmailOAuth: "unknown", notionOAuth: "unknown" }
     };
@@ -44,7 +44,13 @@ export function inspectDeployment({ env = process.env, Database = DiyaDatabase }
   const ready = checks.every((item) => !item.required || item.passed);
   return {
     ready,
-    environment: { publicUrl: config.publicUrl || null, domain: domain || null, model: config.model },
+    environment: {
+      publicUrl: config.publicUrl || null,
+      domain: domain || null,
+      model: config.model,
+      monthlyScreenGuideLimit: config.screenGuideMonthlyLimit,
+      monthlyApprovedActionLimit: config.approvedActionMonthlyLimit
+    },
     checks,
     optional: {
       gmailOAuth: config.google ? "configured" : "not configured",

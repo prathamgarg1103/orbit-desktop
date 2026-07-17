@@ -24,6 +24,10 @@ npm run preflight
 
 It validates the configuration contract, database migrations, server-side OpenAI key presence, public HTTPS URL/domain alignment, and optional OAuth configuration. It never prints secret values or contacts third-party services.
 
+## Beta allowances
+
+Diya Cloud enforces a per-device allowance over each UTC calendar month before it makes an expensive request. Defaults are 250 screen guides and 25 approved agent actions, configured with `DIYA_MONTHLY_SCREEN_GUIDE_LIMIT` and `DIYA_MONTHLY_APPROVED_ACTION_LIMIT`. A request that reaches its allowance returns a clear `429` response before Diya calls OpenAI, Gmail, or Notion. `GET /v1/usage` includes the current period and remaining amounts for the paired desktop.
+
 ## Enroll an early-access desktop
 
 Create a one-time, revocable invite on the server:
@@ -78,7 +82,7 @@ It returns aggregate waitlist states, pending/consumed/revoked invites, enrolled
 
 - `GET /health` — readiness without secrets.
 - `POST /v1/device-sessions` — enroll a desktop with a one-time invite or operator bootstrap code.
-- `GET /v1/me` and `GET /v1/usage` — device status and aggregate counters.
+- `GET /v1/me` and `GET /v1/usage` — device status, aggregate counters, and the paired desktop's remaining monthly allowance.
 - `POST /v1/feedback` — an explicit, encrypted beta note from a paired desktop; no screen content is attached.
 - `DELETE /v1/me/device` — revokes the current desktop token; Diya calls this when Cloud is disconnected.
 - `POST /v1/screen-guides` — one hotkey-authorized image, structured visual guidance, no screen persistence.

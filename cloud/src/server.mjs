@@ -121,6 +121,41 @@ function createPublicRateLimiter(config) {
   };
 }
 
+function billingPeriod() {
+  const current = new Date();
+  return new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), 1)).toISOString();
+}
+
+function quotaLimits(config) {
+  return {
+    screenGuide: config.screenGuideMonthlyLimit || 250,
+    approvedAction: config.approvedActionMonthlyLimit || 25
+  };
+}
+
+function quotaUsage(database, deviceId, config, periodStart = billingPeriod()) {
+  const limits = quotaLimits(config);
+  const screenGuides = database.usageCountSince(deviceId, "screen_guide", periodStart);
+  const approvedActions = database.usageCountSince(deviceId, "approved_action", periodStart);
+  return {
+    periodStart,
+    screenGuides: { used: screenGuides, limit: limits.screenGuide, remaining: Math.max(0, limits.screenGuide - screenGuides) },
+    approvedActions: { used: approvedActions, limit: limits.approvedAction, remaining: Math.max(0, limits.approvedAction - approvedActions) }
+  };
+}
+
+function reserveQuota(database, deviceId, kind, config) {
+  const periodStart = billingPeriod();
+  const limits = quotaLimits(config);
+  const limit = kind === "screen_guide" ? limits.screenGuide : limits.approvedAction;
+  const reservation = database.reserveMonthlyUsage({ deviceId, kind, limit, periodStart, model: kind === "screen_guide" ? config.model : null });
+  if (!reservation) {
+    const label = kind === "screen_guide" ? "screen guidance" : "approved agent actions";
+    throw new HttpError(429, `This device has used its monthly ${label} allowance. It resets at the start of the next UTC month.`, "monthly_quota_reached");
+  }
+  return reservation;
+}
+
 export function createDiyaServer({ config, database }) {
   const limit = createRateLimiter(config);
   const limitPublic = createPublicRateLimiter(config);
@@ -176,7 +211,7 @@ export function createDiyaServer({ config, database }) {
       }
       if (request.method === "GET" && path === "/v1/usage") {
         const device = authenticate(request, database);
-        return sendJson(response, 200, { usage: database.usageSummary(device.id) });
+        return sendJson(response, 200, { usage: database.usageSummary(device.id), quota: quotaUsage(database, device.id, config) });
       }
       if (request.method === "POST" && path === "/v1/feedback") {
         const device = authenticate(request, database);
@@ -202,8 +237,15 @@ export function createDiyaServer({ config, database }) {
         const body = await readJson(request);
         const requestText = stringValue(body.request, "request", 1_500);
         const mode = body.mode === "agent" ? "agent" : "coach";
-        const result = await createScreenGuide({ config, request: requestText, mode, screenImage: body.screenImage, focus: body.focus, deviceId: device.id });
-        database.recordUsage(device.id, { kind: "screen_guide", model: config.model, imageBytes: result.imageBytes });
+        const reservation = reserveQuota(database, device.id, "screen_guide", config);
+        let result;
+        try {
+          result = await createScreenGuide({ config, request: requestText, mode, screenImage: body.screenImage, focus: body.focus, deviceId: device.id });
+        } catch (error) {
+          database.cancelUsageReservation(reservation.id);
+          throw error;
+        }
+        database.completeUsageReservation(reservation.id, { model: config.model, imageBytes: result.imageBytes });
         return sendJson(response, 200, { mode, demo: false, text: result.text, steps: result.steps });
       }
       const connectorMatch = /^\/v1\/connectors\/(gmail|notion)$/.exec(path);
@@ -240,8 +282,15 @@ export function createDiyaServer({ config, database }) {
         const action = body.action;
         const provider = action?.kind === "gmail_draft" ? "gmail" : action?.kind === "notion_create_page" ? "notion" : "";
         if (!PROVIDERS.has(provider)) throw new HttpError(400, "Diya does not support that approved action.", "unsupported_action");
-        const result = await executeApprovedAction({ action, connection: await activeConnection({ provider, deviceId: device.id, config, database }) });
-        database.recordUsage(device.id, { kind: "approved_action" });
+        const reservation = reserveQuota(database, device.id, "approved_action", config);
+        let result;
+        try {
+          result = await executeApprovedAction({ action, connection: await activeConnection({ provider, deviceId: device.id, config, database }) });
+        } catch (error) {
+          database.cancelUsageReservation(reservation.id);
+          throw error;
+        }
+        database.completeUsageReservation(reservation.id);
         return sendJson(response, 200, result);
       }
       throw new HttpError(404, "Diya Cloud could not find that endpoint.", "not_found");

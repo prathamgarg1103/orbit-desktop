@@ -70,6 +70,8 @@ export function loadConfig(env = process.env) {
     model,
     requestLimit: boundedInt(environmentValue(env, "DIYA_REQUEST_LIMIT"), 30, 1, 500),
     requestWindowMs: boundedInt(environmentValue(env, "DIYA_REQUEST_WINDOW_MS"), 10 * 60 * 1000, 10_000, 3_600_000),
+    screenGuideMonthlyLimit: boundedInt(environmentValue(env, "DIYA_MONTHLY_SCREEN_GUIDE_LIMIT"), 250, 1, 10_000),
+    approvedActionMonthlyLimit: boundedInt(environmentValue(env, "DIYA_MONTHLY_APPROVED_ACTION_LIMIT"), 25, 1, 10_000),
     waitlistRequestLimit: boundedInt(environmentValue(env, "DIYA_WAITLIST_REQUEST_LIMIT"), 5, 1, 50),
     waitlistWindowMs: boundedInt(environmentValue(env, "DIYA_WAITLIST_WINDOW_MS"), 15 * 60 * 1000, 10_000, 3_600_000),
     allowedOrigins: new Set(String(environmentValue(env, "DIYA_ALLOWED_ORIGINS") || "").split(",").map((item) => item.trim()).filter(Boolean)),

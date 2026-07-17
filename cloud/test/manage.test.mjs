@@ -69,6 +69,11 @@ test("issues, lists, revokes, and safely converts waitlist requests into one-tim
     });
     feedbackDatabase.recordUsage(feedbackDevice.id, { kind: "screen_guide", model: "gpt-5.6", imageBytes: 1200 });
     feedbackDatabase.recordUsage(feedbackDevice.id, { kind: "approved_action" });
+    const reservation = feedbackDatabase.reserveMonthlyUsage({ deviceId: feedbackDevice.id, kind: "test_quota", limit: 1, periodStart: "2000-01-01T00:00:00.000Z" });
+    assert.ok(reservation?.id);
+    assert.equal(feedbackDatabase.reserveMonthlyUsage({ deviceId: feedbackDevice.id, kind: "test_quota", limit: 1, periodStart: "2000-01-01T00:00:00.000Z" }), null);
+    assert.equal(feedbackDatabase.cancelUsageReservation(reservation.id), true);
+    assert.ok(feedbackDatabase.reserveMonthlyUsage({ deviceId: feedbackDevice.id, kind: "test_quota", limit: 1, periodStart: "2000-01-01T00:00:00.000Z" })?.id);
     feedbackDatabase.close();
     const feedback = runAdmin({ args: ["feedback", "list"], env: environment, write: () => {} }).feedback;
     assert.equal(feedback[0].message, "The hover label did not update in one app.");

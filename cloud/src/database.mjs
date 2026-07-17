@@ -366,6 +366,52 @@ export class DiyaDatabase {
       .run(newId(), deviceId, String(kind).slice(0, 60), model ? String(model).slice(0, 100) : null, Math.max(0, Number(imageBytes) || 0), now());
   }
 
+  reserveMonthlyUsage({ deviceId, kind, limit, periodStart, model = null }) {
+    const reservation = {
+      id: newId(),
+      deviceId: String(deviceId),
+      kind: String(kind).slice(0, 60),
+      limit: Math.max(1, Number.parseInt(limit, 10) || 1),
+      periodStart: String(periodStart),
+      model: model ? String(model).slice(0, 100) : null,
+      createdAt: now()
+    };
+    let transactionOpen = false;
+    try {
+      this.db.exec("BEGIN IMMEDIATE");
+      transactionOpen = true;
+      const used = Number(this.db.prepare("SELECT COUNT(*) AS count FROM usage_events WHERE device_id = ? AND kind = ? AND created_at >= ?").get(reservation.deviceId, reservation.kind, reservation.periodStart).count || 0);
+      if (used >= reservation.limit) {
+        this.db.exec("COMMIT");
+        transactionOpen = false;
+        return null;
+      }
+      this.db.prepare("INSERT INTO usage_events (id, device_id, kind, model, image_bytes, created_at) VALUES (?, ?, ?, ?, 0, ?)")
+        .run(reservation.id, reservation.deviceId, reservation.kind, reservation.model, reservation.createdAt);
+      this.db.exec("COMMIT");
+      transactionOpen = false;
+      return { id: reservation.id, kind: reservation.kind, createdAt: reservation.createdAt };
+    } catch (error) {
+      if (transactionOpen) this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  completeUsageReservation(id, { model = null, imageBytes = 0 } = {}) {
+    return this.db.prepare("UPDATE usage_events SET model = COALESCE(?, model), image_bytes = ? WHERE id = ?")
+      .run(model ? String(model).slice(0, 100) : null, Math.max(0, Number(imageBytes) || 0), String(id)).changes > 0;
+  }
+
+  cancelUsageReservation(id) {
+    return this.db.prepare("DELETE FROM usage_events WHERE id = ?").run(String(id)).changes > 0;
+  }
+
+  usageCountSince(deviceId, kind, periodStart) {
+    const row = this.db.prepare("SELECT COUNT(*) AS count FROM usage_events WHERE device_id = ? AND kind = ? AND created_at >= ?")
+      .get(String(deviceId), String(kind), String(periodStart));
+    return Number(row.count || 0);
+  }
+
   usageSummary(deviceId) {
     const row = this.db.prepare(`
       SELECT COUNT(*) AS requests, COALESCE(SUM(image_bytes), 0) AS imageBytes, MAX(created_at) AS lastRequestAt
