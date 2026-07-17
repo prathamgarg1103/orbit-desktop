@@ -421,7 +421,11 @@ ipcMain.handle("companion:saveConnector", async (_event, payload) => {
 });
 ipcMain.handle("companion:disconnectConnector", async (_event, provider) => {
   if (provider === "openai") saveConnectorCredentials({ openaiApiKey: "" });
-  else if (provider === "cloud") { saveConnectorCredentials({ cloudUrl: "", cloudToken: "" }); cloudConnectorState = { gmail: false, notion: false }; }
+  else if (provider === "cloud") {
+    try { await cloudRequest("/v1/me/device", { method: "DELETE" }); } catch {}
+    saveConnectorCredentials({ cloudUrl: "", cloudToken: "" });
+    cloudConnectorState = { gmail: false, notion: false };
+  }
   else if (provider === "gmail") {
     if (cloudConfig()) { await cloudRequest("/v1/connectors/gmail", { method: "DELETE" }); await refreshCloudConnectors(); }
     else saveConnectorCredentials({ gmailAccessToken: "" });

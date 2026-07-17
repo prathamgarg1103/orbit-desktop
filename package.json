@@ -1,6 +1,6 @@
 {
   "name": "orbit-desktop",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "description": "A hotkey-activated, screen-aware desktop AI buddy that teaches and launches approval-first agents.",
   "main": "main.cjs",

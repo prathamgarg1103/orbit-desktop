@@ -23,6 +23,8 @@ Connector credentials are stored through Electron `safeStorage`, using the opera
 
 The `cloud` service is a separately deployable Node + SQLite API for the production product. Pair the desktop in the Connections gear using a server URL and one-time bootstrap code; it receives a revocable device token, then sends hotkey screen-guide requests to the server. Cloud holds the OpenAI project key, encrypts Gmail/Notion tokens at rest, supports aggregate per-device usage, rate limits requests, and executes only desktop-approved actions. It never persists screen images, requests, responses, or action content. With a production HTTPS URL and provider credentials, the Gmail and Notion chips can open browser-based OAuth instead of asking the customer to paste tokens.
 
+Disconnecting **Cloud** in Orbit revokes that desktop's server-side device token before clearing it locally.
+
 See [Orbit Cloud setup](cloud/README.md) and the [deployment runbook](cloud/DEPLOY.md). Production deployment still needs your HTTPS domain plus Google and Notion OAuth application credentials; the code is ready, but those real callback registrations cannot be invented locally.
 
 ## Run from source
@@ -49,7 +51,7 @@ npm run check
 npm run dist
 ```
 
-The portable artifact is written to `dist\Orbit 0.6.0.exe`.
+The portable artifact is written to `dist\Orbit 0.6.1.exe`.
 
 ## Submission material
 

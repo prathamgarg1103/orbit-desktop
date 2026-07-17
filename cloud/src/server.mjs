@@ -110,6 +110,11 @@ export function createOrbitServer({ config, database }) {
         const device = authenticate(request, database);
         return sendJson(response, 200, { device: { id: device.id, name: device.name, createdAt: device.createdAt }, connectors: database.connectorStatus(device.id) });
       }
+      if (request.method === "DELETE" && path === "/v1/me/device") {
+        const device = authenticate(request, database);
+        database.revokeDevice(device.id);
+        return sendJson(response, 200, { revoked: true });
+      }
       if (request.method === "GET" && path === "/v1/usage") {
         const device = authenticate(request, database);
         return sendJson(response, 200, { usage: database.usageSummary(device.id) });

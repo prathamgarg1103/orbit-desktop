@@ -69,6 +69,12 @@ export class OrbitDatabase {
     this.db.prepare("UPDATE devices SET last_seen_at = ? WHERE id = ?").run(now(), id);
   }
 
+  revokeDevice(id) {
+    const result = this.db.prepare("UPDATE devices SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL").run(now(), id);
+    this.db.prepare("DELETE FROM oauth_states WHERE device_id = ?").run(id);
+    return result.changes > 0;
+  }
+
   putConnection(deviceId, provider, values) {
     if (!PROVIDERS.has(provider)) throw new Error("Unsupported connector provider.");
     const metadata = JSON.stringify(values.metadata || {}).slice(0, 8_000);

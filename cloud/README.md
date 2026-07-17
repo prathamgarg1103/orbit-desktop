@@ -25,6 +25,7 @@ Node 22.13+ is required because the service uses the built-in SQLite driver. Put
 - `GET /health` — readiness without secrets.
 - `POST /v1/device-sessions` — pair a desktop with a bootstrap code.
 - `GET /v1/me` and `GET /v1/usage` — device status and aggregate counters.
+- `DELETE /v1/me/device` — revokes the current desktop token; Orbit calls this when Cloud is disconnected.
 - `POST /v1/screen-guides` — one hotkey-authorized image, structured visual guidance, no screen persistence.
 - `PUT` / `DELETE /v1/connectors/gmail|notion` — encrypted server-side connector credentials.
 - `POST /v1/oauth/gmail|notion/start` and `/oauth/:provider/callback` — browser OAuth handoff with signed, one-time state. Gmail uses PKCE and encrypted refresh tokens.

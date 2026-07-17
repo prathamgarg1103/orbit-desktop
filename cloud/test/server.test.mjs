@@ -66,6 +66,9 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     assert.equal(typeof captured[0].text.format.schema, "object");
     const usage = await request(cloudUrl, "/v1/usage", { headers: auth });
     assert.equal(usage.body.usage.requests, 1);
+    const revoked = await request(cloudUrl, "/v1/me/device", { method: "DELETE", headers: auth });
+    assert.equal(revoked.body.revoked, true);
+    assert.equal((await request(cloudUrl, "/v1/me", { headers: auth })).status, 401);
   } finally {
     database.close();
     await close(cloud);
