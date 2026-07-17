@@ -2,11 +2,11 @@
 
 Orbit is an original Windows desktop companion for getting unstuck inside any app. It is inspired by the screen-native assistant category, but uses its own name, visual system, copy, and implementation.
 
-Press `Ctrl` + `Shift` + `Space` from FL Studio, Claude Code, a browser, or any other desktop tool. Orbit captures that display once, then appears as a small second cursor beside your real one. As you move, it can identify the accessible control under the pointer. Ask by voice or text and it gives a concise response plus coordinate-aware next steps that it can draw directly on the current screen.
+Press `Ctrl` + `Shift` + `Space` from FL Studio, Claude Code, a browser, or any other desktop tool. Orbit captures that display once, then appears only as a small second cursor beside your real one. It is click-through and never leaves a chat card floating on your screen. Press the same hotkey again when you want the ask panel; Orbit keeps the active screen and pointer context for a concise response plus coordinate-aware next steps that it can draw directly on the current screen.
 
 ## What works
 
-- **Cursor-native companion:** Orbit is absent until the hotkey. While a session is active, its compact companion follows beside the real pointer and reads the text-only Windows accessibility label under it.
+- **Cursor-native companion:** Orbit is absent until the hotkey. While a session is active, only its small click-through second cursor follows beside the real pointer and reads the text-only Windows accessibility label under it. The controls appear only after a second hotkey.
 - **Talk:** Ask a spoken or typed question about the hotkey-authorized screen. Connect OpenAI directly for the hackathon build, or pair Orbit Cloud so the desktop never holds the product API key. Either path returns a structured answer with up to four screen targets.
 - **Guide on screen:** Choose **Guide me** to show a temporary, click-through guide cursor, target ring, and instruction bubble. Press `Ctrl` + `Shift` + `G` for the next step.
 - **Agents:** Describe a task naturally, or begin a voice request with `Orbit agent`. Agent mode can use current public web information when needed, then proposes any Gmail or Notion action for explicit approval.
@@ -39,7 +39,7 @@ Use the gear button in Orbit to connect OpenAI without a terminal. Developers ca
 
 ## Controls
 
-- `Ctrl` + `Shift` + `Space` — capture the current display and activate Orbit.
+- `Ctrl` + `Shift` + `Space` — capture the current display and activate Orbit's small second cursor; press it again to open the ask panel.
 - `Ctrl` + `Shift` + `G` — advance to the next on-screen guide step.
 - `Esc` — dismiss the guide, then Orbit and its in-memory screen context.
 - **Voice button** — start and stop a spoken request.
@@ -51,7 +51,7 @@ npm run check
 npm run dist
 ```
 
-The portable artifact is written to `dist\Orbit 0.6.1.exe`.
+The portable artifact is written to `dist\Orbit 0.7.0.exe`.
 
 ## Submission material
 

@@ -9,7 +9,7 @@
 
 ## Description
 
-Orbit is a cursor-native desktop companion for the instant a person gets stuck. In FL Studio, Claude Code, a browser, or another unfamiliar app, press `Ctrl` + `Shift` + `Space`. Orbit captures that current display once and appears as a small second cursor beside the real pointer. As the person moves, Orbit can identify the accessible control under the pointer, so the interaction stays grounded in the actual interface instead of a detached chat window.
+Orbit is a cursor-native desktop companion for the instant a person gets stuck. In FL Studio, Claude Code, a browser, or another unfamiliar app, press `Ctrl` + `Shift` + `Space`. Orbit captures that current display once and appears only as a small, click-through second cursor beside the real pointer. A second press opens the ask panel when it is wanted; the controls do not remain floating while the person works. As the person moves, Orbit can identify the accessible control under the pointer, so the interaction stays grounded in the actual interface instead of a detached chat window.
 
 In **Talk**, a person asks a question by voice or text. GPT-5.6 reasons over the explicit hotkey capture and returns a short response plus screen coordinates for the important next steps. Choosing **Guide me** draws a click-through target ring, guide cursor, and instruction bubble directly over the app; `Ctrl` + `Shift` + `G` advances through the steps.
 
@@ -21,9 +21,9 @@ Orbit is an original name, visual system, and implementation inspired by the scr
 
 ## Judge testing notes
 
-1. Run `npm install` and `npm start` in this directory, or use `dist\Orbit 0.6.1.exe` after building.
+1. Run `npm install` and `npm start` in this directory, or use `dist\Orbit 0.7.0.exe` after building.
 2. Place another application on screen and press `Ctrl` + `Shift` + `Space`.
-3. Move the pointer over controls to see Orbit's compact hover context, then ask a Talk question and choose **Guide me**.
+3. Move the pointer over controls with only Orbit's second cursor visible. Press the hotkey again to ask a Talk question, then choose **Guide me**.
 4. Press `Ctrl` + `Shift` + `G` to advance the guide. Press `Esc` to close it and clear the active session.
 5. Switch to **Agent** and ask for a task. Use the settings gear to connect test Notion or Gmail credentials; actions require approval and Gmail only creates drafts.
 6. For live visual reasoning and OpenAI transcription, use the in-app OpenAI connection before testing. The production-shaped alternative is [Orbit Cloud](cloud/README.md): pair the desktop with a one-time code so the server owns the product OpenAI key.

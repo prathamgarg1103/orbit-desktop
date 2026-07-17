@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld("orbit", {
   close: () => ipcRenderer.invoke("companion:close"),
   resize: (size) => ipcRenderer.send("companion:resize", size),
   setFollow: (shouldFollow) => ipcRenderer.send("companion:follow", shouldFollow),
+  setPointerMode: (enabled) => ipcRenderer.send("companion:pointerMode", enabled),
   ask: (payload) => ipcRenderer.invoke("companion:ask", payload),
   draw: (payload) => ipcRenderer.invoke("companion:draw", payload),
   connectors: () => ipcRenderer.invoke("companion:connectors"),
@@ -13,6 +14,7 @@ contextBridge.exposeInMainWorld("orbit", {
   startOAuth: (provider) => ipcRenderer.invoke("companion:startOAuth", provider),
   transcribe: (payload) => ipcRenderer.invoke("companion:transcribe", payload),
   onOpened: (callback) => ipcRenderer.on("companion:opened", (_event, payload) => callback(payload)),
+  onPrompt: (callback) => ipcRenderer.on("companion:prompt", () => callback()),
   onError: (callback) => ipcRenderer.on("companion:error", (_event, message) => callback(message)),
   onHover: (callback) => ipcRenderer.on("companion:hover", (_event, payload) => callback(payload)),
   onGuidance: (callback) => ipcRenderer.on("guidance:show", (_event, payload) => callback(payload))

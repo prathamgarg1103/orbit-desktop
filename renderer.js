@@ -33,6 +33,7 @@ let selectedConnector;
 let liveVoice = false;
 let activeRecorder;
 let cloudConnected = false;
+const POINTER_SIZE = { width: 54, height: 54 };
 
 document.querySelector("#close").onclick = () => window.orbit.close();
 document.querySelector("#settings").onclick = toggleSettings;
@@ -55,26 +56,52 @@ prompt.addEventListener("keydown", (event) => { if (event.key === "Enter") submi
 window.orbit.onOpened((payload) => {
   liveVoice = Boolean(payload.liveVoice);
   contextLabel.textContent = payload.live ? "screen context live" : "screen context ready";
-  hoverLine.textContent = "Orbit is following your cursor. Ask about what you point at.";
   answer.hidden = true;
   connections.hidden = true;
   currentAgent = undefined;
-  setState("ready", 164);
-  window.orbit.setFollow(true);
-  loadConnectors();
-  prompt.focus();
+  enterPointerMode();
 });
-window.orbit.onError((message) => { hoverLine.textContent = message; setState("ready", 164); });
+window.orbit.onPrompt(() => enterPromptMode());
+window.orbit.onError((message) => {
+  answer.hidden = true;
+  connections.hidden = true;
+  enterPromptMode(message);
+});
 window.orbit.onHover((item) => {
-  if (companion.classList.contains("state-thinking") || !answer.hidden || !connections.hidden) return;
+  if (companion.classList.contains("state-pointer") || companion.classList.contains("state-thinking") || !answer.hidden || !connections.hidden) return;
   const name = String(item?.name || "").trim();
   const type = String(item?.controlType || "").replace(/^ControlType\./, "").replace(/Control$/, "").toLowerCase();
   hoverLine.textContent = name || type ? `Pointing at ${name || type}${name && type ? ` (${type})` : ""}. Ask Orbit what it does.` : "Point at anything and ask Orbit what to do next.";
 });
 
-function setState(state, height) {
+function setState(state, height, width = 360) {
   companion.className = `companion state-${state}`;
-  window.orbit.resize({ width: 360, height });
+  window.orbit.resize({ width, height });
+}
+
+function enterPointerMode() {
+  prompt.value = "";
+  connections.hidden = true;
+  connectorForm.hidden = true;
+  selectedConnector = undefined;
+  companion.className = "companion state-pointer";
+  window.orbit.resize(POINTER_SIZE);
+  window.orbit.setPointerMode(true);
+  window.orbit.setFollow(true);
+}
+
+function enterPromptMode(message) {
+  answer.hidden = true;
+  connections.hidden = true;
+  connectorForm.hidden = true;
+  selectedConnector = undefined;
+  hoverLine.textContent = message || "Ask about what you are pointing at, or tell Orbit what to do.";
+  hint.innerHTML = "<kbd>Esc</kbd> hide &middot; Orbit only sees a screen after the hotkey";
+  window.orbit.setPointerMode(false);
+  window.orbit.setFollow(false);
+  setState("prompt", 164);
+  loadConnectors();
+  prompt.focus();
 }
 
 function setMode(nextMode) {
@@ -97,6 +124,7 @@ function toggleSettings() {
   if (connections.hidden) {
     connections.hidden = false;
     answer.hidden = true;
+    window.orbit.setPointerMode(false);
     window.orbit.setFollow(false);
     setState("settings", 265);
     loadConnectors();
@@ -107,7 +135,7 @@ function closeSettings() {
   connections.hidden = true;
   connectorForm.hidden = true;
   selectedConnector = undefined;
-  setState(answer.hidden ? "ready" : "answer", answer.hidden ? 164 : 320);
+  if (answer.hidden) enterPointerMode(); else setState("answer", 320);
 }
 
 function openConnectorForm(provider, connected) {
@@ -179,6 +207,7 @@ async function submit() {
   voice.disabled = true;
   answer.hidden = true;
   connections.hidden = true;
+  window.orbit.setPointerMode(false);
   hoverLine.textContent = mode === "agent" ? "On it. Building a safe plan..." : "On it. Looking at this screen...";
   setState("thinking", 164);
   try {
@@ -188,7 +217,7 @@ async function submit() {
     presentAnswer(result);
   } catch (error) {
     hoverLine.textContent = error.message || "Orbit could not answer that.";
-    setState("ready", 164);
+    setState("prompt", 164);
   } finally {
     ask.disabled = false;
     voice.disabled = false;
@@ -207,6 +236,7 @@ function presentAnswer(result) {
   }
   hoverLine.textContent = result.mode === "agent" ? "Plan ready. Orbit has not changed anything." : "Answer ready. Ask Orbit to guide you through it.";
   window.orbit.setFollow(false);
+  window.orbit.setPointerMode(false);
   setState("answer", currentAgent ? 390 : 320);
   if (result.mode === "coach") speak(result.text);
 }
@@ -218,14 +248,9 @@ async function showGuide() {
 }
 
 function resetToAsk() {
-  prompt.value = "";
   answer.hidden = true;
   currentAgent = undefined;
-  hoverLine.textContent = "Orbit is following your cursor. Ask about what you point at.";
-  hint.innerHTML = "<kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Space</kbd> capture &middot; Orbit follows while active";
-  setState("ready", 164);
-  window.orbit.setFollow(true);
-  prompt.focus();
+  enterPointerMode();
 }
 
 async function runApprovedAgent() {

@@ -9,8 +9,9 @@ const execFileAsync = promisify(execFile);
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5.6";
 const RESPONSES_URL = (process.env.ORBIT_RESPONSES_URL || "https://api.openai.com/v1/responses").replace(/\/+$/, "");
 const TRANSCRIPTIONS_URL = (process.env.ORBIT_TRANSCRIPTIONS_URL || "https://api.openai.com/v1/audio/transcriptions").replace(/\/+$/, "");
-const CURSOR_GAP = 20;
-const MIN_COMPANION_SIZE = { width: 340, height: 164 };
+const CURSOR_GAP = 14;
+const POINTER_COMPANION_SIZE = { width: 54, height: 54 };
+const MIN_COMPANION_SIZE = { ...POINTER_COMPANION_SIZE };
 const MAX_COMPANION_SIZE = { width: 420, height: 520 };
 
 const GUIDE_SCHEMA = {
@@ -43,6 +44,7 @@ let guidanceWindow;
 let latestContext;
 let opening = false;
 let companionSize = { ...MIN_COMPANION_SIZE };
+let companionMode = "pointer";
 let following = false;
 let followTimer;
 let inspectTimer;
@@ -169,6 +171,7 @@ function createCompanionWindow() {
   });
   companionWindow.setAlwaysOnTop(true, "screen-saver");
   companionWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  companionWindow.setIgnoreMouseEvents(true, { forward: true });
   companionWindow.loadFile(path.join(__dirname, "index.html"));
   companionWindow.on("closed", () => { companionWindow = undefined; });
 }
@@ -246,6 +249,13 @@ function stopFollowing() {
   inspectTimer = undefined;
 }
 
+function setCompanionPointerMode(enabled) {
+  companionMode = enabled ? "pointer" : "panel";
+  if (!companionWindow || companionWindow.isDestroyed()) return;
+  companionWindow.setIgnoreMouseEvents(enabled, { forward: true });
+  if (enabled) startFollowing(); else stopFollowing();
+}
+
 function uiaWorkerPath() {
   return app.isPackaged
     ? path.join(process.resourcesPath, "app.asar.unpacked", "uia-worker.ps1")
@@ -282,6 +292,7 @@ async function inspectPointer() {
 
 function hideCompanion() {
   stopFollowing();
+  companionMode = "pointer";
   companionWindow?.hide();
   latestContext = undefined;
   guideState = undefined;
@@ -289,13 +300,20 @@ function hideCompanion() {
 
 async function openCompanion() {
   if (opening) return;
-  opening = true;
   if (!companionWindow) createCompanionWindow();
+  if (companionWindow.isVisible() && companionMode === "pointer") {
+    setCompanionPointerMode(false);
+    companionWindow.focus();
+    sendTo(companionWindow, "companion:prompt");
+    return;
+  }
+  opening = true;
+  stopFollowing();
   companionWindow.hide();
   try {
     latestContext = await captureScreenContext();
-    companionWindow.show();
-    companionWindow.focus();
+    setCompanionPointerMode(true);
+    companionWindow.showInactive();
     positionCompanion();
     startFollowing();
     sendTo(companionWindow, "companion:opened", {
@@ -305,6 +323,7 @@ async function openCompanion() {
       focus: normalizedFocus(latestContext)
     });
   } catch {
+    setCompanionPointerMode(false);
     companionWindow.show();
     companionWindow.focus();
     positionCompanion();
@@ -385,6 +404,7 @@ ipcMain.on("companion:resize", (_event, next) => {
 ipcMain.on("companion:follow", (_event, shouldFollow) => {
   if (shouldFollow) startFollowing(); else stopFollowing();
 });
+ipcMain.on("companion:pointerMode", (_event, enabled) => setCompanionPointerMode(Boolean(enabled)));
 ipcMain.handle("companion:saveConnector", async (_event, payload) => {
   const provider = payload?.provider;
   const token = String(payload?.token || "").trim();
