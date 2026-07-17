@@ -70,12 +70,66 @@ function connectorCredentials() {
     openaiApiKey: process.env.OPENAI_API_KEY || saved.openaiApiKey || "",
     gmailAccessToken: process.env.GMAIL_ACCESS_TOKEN || saved.gmailAccessToken || "",
     notionToken: process.env.NOTION_TOKEN || saved.notionToken || "",
-    notionParentPageId: process.env.NOTION_PARENT_PAGE_ID || saved.notionParentPageId || ""
+    notionParentPageId: process.env.NOTION_PARENT_PAGE_ID || saved.notionParentPageId || "",
+    cloudUrl: process.env.ORBIT_CLOUD_URL || saved.cloudUrl || "",
+    cloudToken: process.env.ORBIT_CLOUD_TOKEN || saved.cloudToken || ""
   };
 }
 
 function openAiApiKey() {
   return connectorCredentials().openaiApiKey;
+}
+
+let cloudConnectorState = { gmail: false, notion: false };
+
+function normalizeCloudUrl(value) {
+  let url;
+  try { url = new URL(String(value || "").trim()); } catch { throw new Error("Enter a valid Orbit Cloud URL."); }
+  const local = ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  if (url.protocol !== "https:" && !(local && url.protocol === "http:")) {
+    throw new Error("Orbit Cloud must use HTTPS outside local development.");
+  }
+  return url.origin;
+}
+
+function cloudConfig() {
+  const credentials = connectorCredentials();
+  if (!credentials.cloudUrl || !credentials.cloudToken) return null;
+  try { return { url: normalizeCloudUrl(credentials.cloudUrl), token: credentials.cloudToken }; } catch { return null; }
+}
+
+async function cloudRequest(pathname, { method = "GET", body } = {}) {
+  const cloud = cloudConfig();
+  if (!cloud) throw new Error("Connect Orbit Cloud first.");
+  const response = await fetch(`${cloud.url}${pathname}`, {
+    method,
+    headers: { Authorization: `Bearer ${cloud.token}`, "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: AbortSignal.timeout(50_000)
+  }).catch((error) => { throw new Error(`Orbit Cloud is unavailable: ${error.message}`); });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error?.message || `Orbit Cloud returned ${response.status}.`);
+  return payload;
+}
+
+async function pairCloud(url, bootstrapCode) {
+  const endpoint = normalizeCloudUrl(url);
+  const response = await fetch(`${endpoint}/v1/device-sessions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bootstrapCode, deviceName: "Orbit desktop" }),
+    signal: AbortSignal.timeout(20_000)
+  }).catch((error) => { throw new Error(`Orbit Cloud is unavailable: ${error.message}`); });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.accessToken) throw new Error(payload.error?.message || "Orbit Cloud could not pair this desktop.");
+  return { url: endpoint, token: payload.accessToken };
+}
+
+async function refreshCloudConnectors() {
+  if (!cloudConfig()) { cloudConnectorState = { gmail: false, notion: false }; return cloudConnectorState; }
+  const profile = await cloudRequest("/v1/me");
+  cloudConnectorState = { gmail: Boolean(profile.connectors?.gmail), notion: Boolean(profile.connectors?.notion) };
+  return cloudConnectorState;
 }
 
 function saveConnectorCredentials(next) {
@@ -238,7 +292,8 @@ async function openCompanion() {
     startFollowing();
     sendTo(companionWindow, "companion:opened", {
       capturedAt: latestContext.capturedAt,
-      live: Boolean(openAiApiKey()),
+      live: Boolean(openAiApiKey() || cloudConfig()),
+      liveVoice: Boolean(openAiApiKey()),
       focus: normalizedFocus(latestContext)
     });
   } catch {
@@ -292,18 +347,23 @@ function normalizedFocus(context) {
   };
 }
 
-function connectorStatus() {
+async function connectorStatus() {
   const credentials = connectorCredentials();
+  const cloud = cloudConfig();
+  if (cloud) {
+    try { await refreshCloudConnectors(); } catch { cloudConnectorState = { gmail: false, notion: false }; }
+  }
   return {
     openai: Boolean(credentials.openaiApiKey),
-    gmail: Boolean(credentials.gmailAccessToken),
-    notion: Boolean(credentials.notionToken && credentials.notionParentPageId),
+    cloud: Boolean(cloud),
+    gmail: Boolean(credentials.gmailAccessToken) || cloudConnectorState.gmail,
+    notion: Boolean(credentials.notionToken && credentials.notionParentPageId) || cloudConnectorState.notion,
     secureStorage: safeStorage.isEncryptionAvailable()
   };
 }
 
 ipcMain.handle("companion:close", hideCompanion);
-ipcMain.handle("companion:connectors", () => connectorStatus());
+ipcMain.handle("companion:connectors", async () => connectorStatus());
 ipcMain.on("companion:resize", (_event, next) => {
   companionSize = {
     width: clamp(Number(next?.width) || MIN_COMPANION_SIZE.width, MIN_COMPANION_SIZE.width, MAX_COMPANION_SIZE.width),
@@ -317,28 +377,46 @@ ipcMain.on("companion:resize", (_event, next) => {
 ipcMain.on("companion:follow", (_event, shouldFollow) => {
   if (shouldFollow) startFollowing(); else stopFollowing();
 });
-ipcMain.handle("companion:saveConnector", (_event, payload) => {
+ipcMain.handle("companion:saveConnector", async (_event, payload) => {
   const provider = payload?.provider;
   const token = String(payload?.token || "").trim();
   const parentPageId = String(payload?.parentPageId || "").trim();
+  const cloudUrl = String(payload?.cloudUrl || "").trim();
   if (provider === "openai") {
     if (!token) throw new Error("Paste an OpenAI API key to enable live Talk and voice.");
     saveConnectorCredentials({ openaiApiKey: token });
+  } else if (provider === "cloud") {
+    if (!token || !cloudUrl) throw new Error("Orbit Cloud needs its URL and a pairing code.");
+    const paired = await pairCloud(cloudUrl, token);
+    saveConnectorCredentials({ cloudUrl: paired.url, cloudToken: paired.token });
+    await refreshCloudConnectors();
   } else if (provider === "gmail") {
     if (!token) throw new Error("Paste a Gmail OAuth access token to connect Gmail.");
-    saveConnectorCredentials({ gmailAccessToken: token });
+    if (cloudConfig()) {
+      await cloudRequest("/v1/connectors/gmail", { method: "PUT", body: { accessToken: token } });
+      await refreshCloudConnectors();
+    } else saveConnectorCredentials({ gmailAccessToken: token });
   } else if (provider === "notion") {
     if (!token || !parentPageId) throw new Error("Notion needs both an integration token and a parent page ID.");
-    saveConnectorCredentials({ notionToken: token, notionParentPageId: parentPageId });
+    if (cloudConfig()) {
+      await cloudRequest("/v1/connectors/notion", { method: "PUT", body: { accessToken: token, metadata: { parentPageId } } });
+      await refreshCloudConnectors();
+    } else saveConnectorCredentials({ notionToken: token, notionParentPageId: parentPageId });
   } else {
     throw new Error("That connector is not available.");
   }
   return connectorStatus();
 });
-ipcMain.handle("companion:disconnectConnector", (_event, provider) => {
+ipcMain.handle("companion:disconnectConnector", async (_event, provider) => {
   if (provider === "openai") saveConnectorCredentials({ openaiApiKey: "" });
-  else if (provider === "gmail") saveConnectorCredentials({ gmailAccessToken: "" });
-  else if (provider === "notion") saveConnectorCredentials({ notionToken: "", notionParentPageId: "" });
+  else if (provider === "cloud") { saveConnectorCredentials({ cloudUrl: "", cloudToken: "" }); cloudConnectorState = { gmail: false, notion: false }; }
+  else if (provider === "gmail") {
+    if (cloudConfig()) { await cloudRequest("/v1/connectors/gmail", { method: "DELETE" }); await refreshCloudConnectors(); }
+    else saveConnectorCredentials({ gmailAccessToken: "" });
+  } else if (provider === "notion") {
+    if (cloudConfig()) { await cloudRequest("/v1/connectors/notion", { method: "DELETE" }); await refreshCloudConnectors(); }
+    else saveConnectorCredentials({ notionToken: "", notionParentPageId: "" });
+  }
   else throw new Error("That connector is not available.");
   return connectorStatus();
 });
@@ -403,6 +481,21 @@ function advanceGuidance() {
 }
 
 async function answerWithScreen(request, mode, context) {
+  if (cloudConfig()) {
+    const cloudResult = await cloudRequest("/v1/screen-guides", {
+      method: "POST",
+      body: { request, mode, screenImage: context.dataUrl, focus: normalizedFocus(context) }
+    });
+    await refreshCloudConnectors().catch(() => {});
+    return {
+      text: String(cloudResult.text || ""),
+      steps: (cloudResult.steps || []).map((step, index) => normalizeStep(step, context, index)),
+      mode,
+      demo: false,
+      connectors: await connectorStatus(),
+      agent: mode === "agent" ? createAgentTask(request) : null
+    };
+  }
   const apiKey = openAiApiKey();
   if (!apiKey) return localDemoResponse(request, mode, context);
   const instructions = mode === "agent"
@@ -430,7 +523,7 @@ async function answerWithScreen(request, mode, context) {
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.error?.message || `OpenAI returned ${response.status}.`);
   const result = parseGuideResponse(outputText(body), context);
-  return { ...result, mode, demo: false, connectors: connectorStatus(), agent: mode === "agent" ? createAgentTask(request) : null };
+  return { ...result, mode, demo: false, connectors: await connectorStatus(), agent: mode === "agent" ? createAgentTask(request) : null };
 }
 
 function parseGuideResponse(raw, context) {
@@ -445,7 +538,7 @@ function parseGuideResponse(raw, context) {
   return { text, steps: extractSteps(text).map((title, index) => normalizeStep({ title, detail: "", ...normalizedFocus(context) }, context, index)) };
 }
 
-function localDemoResponse(request, mode, context) {
+async function localDemoResponse(request, mode, context) {
   const agent = mode === "agent" ? createAgentTask(request) : null;
   const focus = normalizedFocus(context);
   const steps = mode === "agent"
@@ -454,7 +547,7 @@ function localDemoResponse(request, mode, context) {
   return {
     mode,
     demo: true,
-    connectors: connectorStatus(),
+    connectors: await connectorStatus(),
     agent,
     text: mode === "agent"
       ? `On it. I have an agent brief for “${request}”. I will wait for your approval before any Gmail, Notion, or external action.`
@@ -501,21 +594,25 @@ function createAgentTask(request) {
 
 function proposeAgentAction(request) {
   const credentials = connectorCredentials();
+  const cloud = cloudConfig();
   const normal = request.toLowerCase();
-  if (credentials.notionToken && credentials.notionParentPageId && /\b(notion|note|document|save this|save it)\b/.test(normal)) {
+  const useCloudNotion = Boolean(cloud && cloudConnectorState.notion);
+  const useCloudGmail = Boolean(cloud && cloudConnectorState.gmail);
+  if ((useCloudNotion || (credentials.notionToken && credentials.notionParentPageId)) && /\b(notion|note|document|save this|save it)\b/.test(normal)) {
     const title = (request.match(/(?:titled|called)\s+["']?([^"'.\n]{3,100})/i)?.[1]?.trim() || "Orbit agent note").slice(0, 100);
-    return { kind: "notion_create_page", label: "Create a Notion page", detail: `Create “${title}” under your selected Notion page.`, approvalLabel: "Approve page", title, content: `Orbit agent brief\n\n${request}` };
+    return { cloud: useCloudNotion, kind: "notion_create_page", label: "Create a Notion page", detail: `Create “${title}” under your selected Notion page.`, approvalLabel: "Approve page", title, content: `Orbit agent brief\n\n${request}` };
   }
-  if (credentials.gmailAccessToken && /\b(gmail|email|mail|draft)\b/.test(normal)) {
+  if ((useCloudGmail || credentials.gmailAccessToken) && /\b(gmail|email|mail|draft)\b/.test(normal)) {
     const to = request.match(/\b(?:to|recipient)\s+([\w.+-]+@[\w.-]+\.[A-Za-z]{2,})/i)?.[1] || request.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/)?.[0];
     if (!to) return null;
     const subject = request.match(/\bsubject\s*[:=-]\s*([^\n.]{3,120})/i)?.[1]?.trim() || "Draft from Orbit agent";
-    return { kind: "gmail_draft", label: "Create a Gmail draft", detail: `Create a draft addressed to ${to}. Orbit never sends it.`, approvalLabel: "Approve draft", to, subject: subject.slice(0, 120), body: `Draft prepared by Orbit agent for your review.\n\n${request}` };
+    return { cloud: useCloudGmail, kind: "gmail_draft", label: "Create a Gmail draft", detail: `Create a draft addressed to ${to}. Orbit never sends it.`, approvalLabel: "Approve draft", to, subject: subject.slice(0, 120), body: `Draft prepared by Orbit agent for your review.\n\n${request}` };
   }
   return null;
 }
 
 async function executeAgentAction(action) {
+  if (action.cloud) return cloudRequest("/v1/actions/execute", { method: "POST", body: { action } });
   if (action.kind === "notion_create_page") return createNotionPage(action);
   if (action.kind === "gmail_draft") return createGmailDraft(action);
   throw new Error("Orbit does not know how to run that plan.");

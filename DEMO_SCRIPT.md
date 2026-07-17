@@ -24,14 +24,14 @@ Switch to **Agent**. Say or type: “Orbit agent, create a Notion page called la
 
 Voiceover: “Agents are tasks. I can spawn one with my voice. Orbit may use current public information when the task needs it, but any connected action waits for my approval.”
 
-## 1:55–2:25 — Connectors and safety
+## 1:55–2:25 — Cloud, connectors, and safety
 
-Open the settings gear. Show the Notion or Gmail setup and, with safe test credentials, approve a Notion page or Gmail draft.
+Open the settings gear. Show the Orbit Cloud pairing fields, then the Notion or Gmail setup and, with safe test credentials, approve a Notion page or Gmail draft.
 
-Voiceover: “Connections are configured in the app, not a terminal. Credentials use the operating system’s encrypted store. Notion creates a page only after approval, and Gmail creates a draft rather than sending mail.”
+Voiceover: “For the hackathon build, I can connect directly. For the startup path, I pair this desktop with Orbit Cloud: the server holds the product OpenAI key and encrypted connector tokens, while this app only receives a revocable device token. Notion creates a page only after approval, and Gmail creates a draft rather than sending mail.”
 
 ## 2:25–2:45 — Privacy and implementation
 
 Press `Esc`, then show `main.cjs`, `uia-worker.ps1`, and `guidance.js`.
 
-Voiceover: “Orbit does not continuously record my screen. The image exists only for the active hotkey session; the small hover label is text-only and only runs while Orbit is active. I built it with Codex, Electron, GPT-5.6, OpenAI’s Responses API, and OpenAI speech-to-text.”
+Voiceover: “Orbit does not continuously record my screen. The image exists only for the active hotkey session; the small hover label is text-only and only runs while Orbit is active. I built it with Codex, Electron, Node and SQLite, GPT-5.6, OpenAI’s Responses API, and OpenAI speech-to-text.”

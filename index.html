@@ -45,10 +45,11 @@
 
       <section id="connections" class="connections" hidden>
         <div class="connection-head"><strong>connections</strong><button id="close-settings" class="quiet">&times;</button></div>
-        <p>Keys stay in encrypted system storage. Agents always wait for approval.</p>
+        <p>Cloud keeps model and connector secrets server-side. Agents always wait for approval.</p>
         <div id="connector-row" class="connector-row"></div>
         <div id="connector-form" class="connector-form" hidden>
           <label id="connector-title">Access token<input id="connector-token" type="password" autocomplete="off"></label>
+          <label id="cloud-url-row" hidden>Orbit Cloud URL<input id="cloud-url" type="url" autocomplete="url" placeholder="https://cloud.example.com"></label>
           <label id="notion-parent-row" hidden>Notion parent page ID<input id="notion-parent" type="text" autocomplete="off"></label>
           <div><button id="save-connector" class="approve">save</button><button id="disconnect-connector" class="quiet" hidden>disconnect</button></div>
         </div>

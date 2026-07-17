@@ -1,12 +1,12 @@
 {
   "name": "orbit-desktop",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "A hotkey-activated, screen-aware desktop AI buddy that teaches and launches approval-first agents.",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
-    "check": "node --check main.cjs && node --check preload.cjs && node --check renderer.js && node --check guidance.js",
+    "check": "node --check main.cjs && node --check preload.cjs && node --check renderer.js && node --check guidance.js && npm test --prefix cloud",
     "make-icon": "node scripts/make-icon.cjs",
     "dist": "npm run check && electron-builder --win portable"
   },
@@ -25,7 +25,8 @@
     "compression": "store",
     "files": [
       "**/*",
-      "!dist{,/**}"
+      "!dist{,/**}",
+      "!cloud{,/**}"
     ],
     "win": {
       "target": [

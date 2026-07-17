@@ -1,0 +1,14 @@
+{
+  "name": "orbit-cloud",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Secure API service for Orbit desktop sessions and approval-first agent actions.",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node src/index.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}

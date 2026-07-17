@@ -18,6 +18,8 @@ const connectorRow = document.querySelector("#connector-row");
 const connectorForm = document.querySelector("#connector-form");
 const connectorTitle = document.querySelector("#connector-title");
 const connectorToken = document.querySelector("#connector-token");
+const cloudUrlRow = document.querySelector("#cloud-url-row");
+const cloudUrl = document.querySelector("#cloud-url");
 const notionParentRow = document.querySelector("#notion-parent-row");
 const notionParent = document.querySelector("#notion-parent");
 const saveConnector = document.querySelector("#save-connector");
@@ -48,7 +50,7 @@ connectorRow.onclick = (event) => {
 prompt.addEventListener("keydown", (event) => { if (event.key === "Enter") submit(); });
 
 window.orbit.onOpened((payload) => {
-  liveVoice = Boolean(payload.live);
+  liveVoice = Boolean(payload.liveVoice);
   contextLabel.textContent = payload.live ? "screen context live" : "screen context ready";
   hoverLine.textContent = "Orbit is following your cursor. Ask about what you point at.";
   answer.hidden = true;
@@ -83,7 +85,7 @@ async function loadConnectors() {
 }
 
 function renderConnectors(connectors) {
-  connectorRow.innerHTML = [["OpenAI", "openai", connectors.openai], ["Gmail", "gmail", connectors.gmail], ["Notion", "notion", connectors.notion]].map(([name, provider, connected]) => `<button class="connector ${connected ? "connected" : ""}" data-connector="${provider}" data-connected="${connected}"><i></i>${name}</button>`).join("");
+  connectorRow.innerHTML = [["Cloud", "cloud", connectors.cloud], ["OpenAI", "openai", connectors.openai], ["Gmail", "gmail", connectors.gmail], ["Notion", "notion", connectors.notion]].map(([name, provider, connected]) => `<button class="connector ${connected ? "connected" : ""}" data-connector="${provider}" data-connected="${connected}"><i></i>${name}</button>`).join("");
   if (!connectors.secureStorage) hoverLine.textContent = "Secure system storage is unavailable, so connections cannot be saved.";
 }
 
@@ -108,21 +110,23 @@ function openConnectorForm(provider, connected) {
   selectedConnector = provider;
   connectorForm.hidden = false;
   connectorToken.value = "";
+  cloudUrl.value = "";
   notionParent.value = "";
-  const name = provider === "openai" ? "OpenAI" : provider === "notion" ? "Notion" : "Gmail";
+  const name = provider === "cloud" ? "Orbit Cloud" : provider === "openai" ? "OpenAI" : provider === "notion" ? "Notion" : "Gmail";
   connectorTitle.firstChild.textContent = `${connected ? "Manage" : "Connect"} ${name}`;
-  connectorToken.placeholder = provider === "openai" ? "sk-..." : "access token";
+  connectorToken.placeholder = provider === "cloud" ? "pairing code" : provider === "openai" ? "sk-..." : "access token";
+  cloudUrlRow.hidden = provider !== "cloud";
   notionParentRow.hidden = provider !== "notion";
   disconnectConnector.hidden = !connected;
-  setState("settings", provider === "notion" ? 370 : 320);
-  connectorToken.focus();
+  setState("settings", provider === "notion" || provider === "cloud" ? 370 : 320);
+  (provider === "cloud" ? cloudUrl : connectorToken).focus();
 }
 
 async function saveSelectedConnector() {
   if (!selectedConnector) return;
   saveConnector.disabled = true;
   try {
-    const status = await window.orbit.saveConnector({ provider: selectedConnector, token: connectorToken.value, parentPageId: notionParent.value });
+    const status = await window.orbit.saveConnector({ provider: selectedConnector, token: connectorToken.value, parentPageId: notionParent.value, cloudUrl: cloudUrl.value });
     renderConnectors(status);
     if (selectedConnector === "openai") liveVoice = true;
     connectorForm.hidden = true;
