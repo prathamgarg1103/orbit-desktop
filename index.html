@@ -3,58 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Orbit — screen companion</title>
+  <title>Orbit companion</title>
   <link rel="stylesheet" href="renderer.css">
 </head>
 <body>
-  <main class="shell">
-    <header>
-      <div class="brand"><span class="orb">✦</span><span>orbit</span></div>
-      <div class="context" id="context">SCREEN CONTEXT · READY</div>
-      <button id="close" class="icon" aria-label="Close">×</button>
-    </header>
-
-    <section class="hero">
-      <p class="eyebrow" id="mode-label">TALK ABOUT YOUR SCREEN</p>
-      <h1 id="headline">What are you trying to do?</h1>
-      <p id="screen-status">Press the hotkey from any app. Orbit captures that one moment, then gets out of the way.</p>
-    </section>
-
-    <nav class="modes" aria-label="Orbit mode">
-      <button class="mode active" data-mode="coach">Talk</button>
-      <button class="mode" data-mode="agent">Agents</button>
-    </nav>
-
-    <section class="connector-row" id="connectors" aria-label="Connector status"></section>
-
-    <section id="connector-setup" class="connector-setup" hidden>
-      <div class="setup-heading"><strong id="connector-title">Connect a service</strong><button id="cancel-connector" class="text-button">Cancel</button></div>
-      <p id="connector-copy">Your credentials are encrypted with your operating system and stay on this computer.</p>
-      <label>Access token<input id="connector-token" type="password" autocomplete="off" placeholder="Paste a scoped access token"></label>
-      <label id="notion-parent-row" hidden>Notion parent page ID<input id="notion-parent" type="text" autocomplete="off" placeholder="The page where Orbit can add child pages"></label>
-      <div class="setup-actions"><button id="save-connector" class="secondary">Save connection</button><button id="disconnect-connector" class="text-button" hidden>Disconnect</button></div>
-    </section>
-
-    <section class="composer">
-      <textarea id="prompt" rows="3" placeholder="Ask about what you are seeing..."></textarea>
-      <div class="composer-actions">
-        <button id="voice" class="secondary">◉ Speak</button>
-        <button id="ask" class="primary">Talk to Orbit <span>↵</span></button>
+  <main class="companion state-ready" id="companion">
+    <div class="cursor-buddy" aria-hidden="true"><span></span><i></i></div>
+    <section class="bubble">
+      <div class="topline">
+        <span class="live-dot"></span><span id="context-label">screen context ready</span>
+        <button id="settings" class="quiet" aria-label="Connections">&#9881;</button>
+        <button id="close" class="quiet" aria-label="Close">&times;</button>
       </div>
-      <p id="privacy">Orbit never watches continuously. This hotkey capture lives only for this Orbit session.</p>
-    </section>
 
-    <section id="answer" class="answer" hidden aria-live="polite">
-      <div class="answer-top"><span id="answer-mode">ORBIT TALK</span><button id="draw" class="draw">Show me on screen</button></div>
-      <div id="answer-text"></div>
-      <p id="agent-note" hidden>Agent tasks stop for approval before any Gmail, Notion, or external action.</p>
-      <section id="agent-action" class="agent-action" hidden>
-        <p id="agent-action-detail"></p>
-        <button id="approve-agent" class="primary"></button>
+      <p class="hover-line" id="hover-line">Point at anything. Orbit keeps the screen private until you use the hotkey.</p>
+
+      <nav class="modes" aria-label="Mode">
+        <button class="mode active" data-mode="coach">ask</button>
+        <button class="mode" data-mode="agent">agent</button>
+      </nav>
+
+      <div class="composer">
+        <input id="prompt" autocomplete="off" placeholder="ask about what is here" aria-label="Ask Orbit">
+        <button id="voice" class="round" title="Speak">&#9673;</button>
+        <button id="ask" class="send" title="Ask Orbit">&#8594;</button>
+      </div>
+      <p class="hint" id="hint"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Space</kbd> capture &middot; Orbit follows while active</p>
+
+      <section id="answer" class="answer" hidden aria-live="polite">
+        <div class="answer-label" id="answer-mode">orbit</div>
+        <p id="answer-text"></p>
+        <div class="answer-actions">
+          <button id="draw" class="soft">guide me</button>
+          <button id="again" class="soft">ask again</button>
+        </div>
+        <section id="agent-action" class="agent-action" hidden>
+          <p id="agent-action-detail"></p>
+          <button id="approve-agent" class="approve"></button>
+        </section>
+      </section>
+
+      <section id="connections" class="connections" hidden>
+        <div class="connection-head"><strong>connections</strong><button id="close-settings" class="quiet">&times;</button></div>
+        <p>Keys stay in encrypted system storage. Agents always wait for approval.</p>
+        <div id="connector-row" class="connector-row"></div>
+        <div id="connector-form" class="connector-form" hidden>
+          <label id="connector-title">Access token<input id="connector-token" type="password" autocomplete="off"></label>
+          <label id="notion-parent-row" hidden>Notion parent page ID<input id="notion-parent" type="text" autocomplete="off"></label>
+          <div><button id="save-connector" class="approve">save</button><button id="disconnect-connector" class="quiet" hidden>disconnect</button></div>
+        </div>
       </section>
     </section>
-
-    <footer><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Space</kbd> from any app · <kbd>Esc</kbd> to close</footer>
   </main>
   <script src="renderer.js"></script>
 </body>

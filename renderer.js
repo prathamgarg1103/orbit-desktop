@@ -1,22 +1,22 @@
+const companion = document.querySelector("#companion");
 const prompt = document.querySelector("#prompt");
 const ask = document.querySelector("#ask");
 const voice = document.querySelector("#voice");
+const contextLabel = document.querySelector("#context-label");
+const hoverLine = document.querySelector("#hover-line");
+const hint = document.querySelector("#hint");
 const answer = document.querySelector("#answer");
-const answerText = document.querySelector("#answer-text");
 const answerMode = document.querySelector("#answer-mode");
+const answerText = document.querySelector("#answer-text");
 const draw = document.querySelector("#draw");
-const headline = document.querySelector("#headline");
-const modeLabel = document.querySelector("#mode-label");
-const screenStatus = document.querySelector("#screen-status");
-const context = document.querySelector("#context");
-const agentNote = document.querySelector("#agent-note");
+const again = document.querySelector("#again");
 const agentAction = document.querySelector("#agent-action");
 const agentActionDetail = document.querySelector("#agent-action-detail");
 const approveAgent = document.querySelector("#approve-agent");
-const connectorRow = document.querySelector("#connectors");
-const connectorSetup = document.querySelector("#connector-setup");
+const connections = document.querySelector("#connections");
+const connectorRow = document.querySelector("#connector-row");
+const connectorForm = document.querySelector("#connector-form");
 const connectorTitle = document.querySelector("#connector-title");
-const connectorCopy = document.querySelector("#connector-copy");
 const connectorToken = document.querySelector("#connector-token");
 const notionParentRow = document.querySelector("#notion-parent-row");
 const notionParent = document.querySelector("#notion-parent");
@@ -31,90 +31,105 @@ let liveVoice = false;
 let activeRecorder;
 
 document.querySelector("#close").onclick = () => window.orbit.close();
+document.querySelector("#settings").onclick = toggleSettings;
+document.querySelector("#close-settings").onclick = closeSettings;
 document.querySelectorAll(".mode").forEach((button) => { button.onclick = () => setMode(button.dataset.mode); });
 ask.onclick = submit;
-draw.onclick = () => window.orbit.draw({ steps });
 voice.onclick = startVoice;
+draw.onclick = showGuide;
+again.onclick = resetToAsk;
 approveAgent.onclick = runApprovedAgent;
-document.querySelector("#cancel-connector").onclick = closeConnectorSetup;
 saveConnector.onclick = saveSelectedConnector;
 disconnectConnector.onclick = disconnectSelectedConnector;
 connectorRow.onclick = (event) => {
   const button = event.target.closest("[data-connector]");
-  if (button) openConnectorSetup(button.dataset.connector, button.dataset.connected === "true");
+  if (button) openConnectorForm(button.dataset.connector, button.dataset.connected === "true");
 };
-prompt.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) submit();
-});
+prompt.addEventListener("keydown", (event) => { if (event.key === "Enter") submit(); });
 
 window.orbit.onOpened((payload) => {
-  answer.hidden = true;
-  agentAction.hidden = true;
-  currentAgent = undefined;
   liveVoice = Boolean(payload.live);
-  context.textContent = `SCREEN CONTEXT · ${payload.live ? "LIVE" : "DEMO"}`;
-  screenStatus.textContent = `Captured just now at ${new Date(payload.capturedAt).toLocaleTimeString()}. Ask anything about this moment.`;
-  prompt.focus();
+  contextLabel.textContent = payload.live ? "screen context live" : "screen context ready";
+  hoverLine.textContent = "Orbit is following your cursor. Ask about what you point at.";
+  answer.hidden = true;
+  connections.hidden = true;
+  currentAgent = undefined;
+  setState("ready", 164);
+  window.orbit.setFollow(true);
   loadConnectors();
+  prompt.focus();
 });
-window.orbit.onError((message) => { screenStatus.textContent = message; });
+window.orbit.onError((message) => { hoverLine.textContent = message; setState("ready", 164); });
+window.orbit.onHover((item) => {
+  if (companion.classList.contains("state-thinking") || !answer.hidden || !connections.hidden) return;
+  const name = String(item?.name || "").trim();
+  const type = String(item?.controlType || "").replace(/^ControlType\./, "").replace(/Control$/, "").toLowerCase();
+  hoverLine.textContent = name || type ? `Pointing at ${name || type}${name && type ? ` (${type})` : ""}. Ask Orbit what it does.` : "Point at anything and ask Orbit what to do next.";
+});
+
+function setState(state, height) {
+  companion.className = `companion state-${state}`;
+  window.orbit.resize({ width: 360, height });
+}
 
 function setMode(nextMode) {
   mode = nextMode;
   document.querySelectorAll(".mode").forEach((button) => button.classList.toggle("active", button.dataset.mode === mode));
-  const agent = mode === "agent";
-  modeLabel.textContent = agent ? "ORBIT AGENTS" : "TALK ABOUT YOUR SCREEN";
-  headline.textContent = agent ? "What should I take off your plate?" : "What are you trying to do?";
-  prompt.placeholder = agent ? "Describe the task in your own words..." : "Ask about what you are seeing...";
-  ask.innerHTML = agent ? "Start agent <span>↵</span>" : "Talk to Orbit <span>↵</span>";
+  prompt.placeholder = mode === "agent" ? "tell Orbit what to do" : "ask about what is here";
 }
 
 async function loadConnectors() {
-  try { renderConnectors(await window.orbit.connectors()); } catch { connectorRow.textContent = "Connectors unavailable"; }
+  try { renderConnectors(await window.orbit.connectors()); } catch { connectorRow.textContent = "connections unavailable"; }
 }
 
 function renderConnectors(connectors) {
-  connectorRow.innerHTML = [["OpenAI", "openai", connectors.openai], ["Gmail", "gmail", connectors.gmail], ["Notion", "notion", connectors.notion]].map(([name, provider, connected]) => (
-    `<button class="connector ${connected ? "connected" : ""}" data-connector="${provider}" data-connected="${connected}" type="button"><i></i>${name} · ${connected ? "connected" : "connect"}</button>`
-  )).join("");
-  if (!connectors.secureStorage) screenStatus.textContent = "Secure system storage is unavailable, so connectors cannot be saved.";
+  connectorRow.innerHTML = [["OpenAI", "openai", connectors.openai], ["Gmail", "gmail", connectors.gmail], ["Notion", "notion", connectors.notion]].map(([name, provider, connected]) => `<button class="connector ${connected ? "connected" : ""}" data-connector="${provider}" data-connected="${connected}"><i></i>${name}</button>`).join("");
+  if (!connectors.secureStorage) hoverLine.textContent = "Secure system storage is unavailable, so connections cannot be saved.";
 }
 
-function openConnectorSetup(provider, connected) {
-  selectedConnector = provider;
-  connectorSetup.hidden = false;
-  connectorToken.value = "";
-  notionParent.value = "";
-  const notion = provider === "notion";
-  const name = provider === "openai" ? "OpenAI" : notion ? "Notion" : "Gmail";
-  connectorTitle.textContent = connected ? `Manage ${name}` : `Connect ${name}`;
-  connectorCopy.textContent = provider === "openai"
-    ? "Paste an OpenAI API key to enable live screen reasoning and push-to-talk. It is encrypted by your operating system."
-    : notion
-      ? "Paste a Notion integration token and the parent page ID it is allowed to edit. They are encrypted by your operating system."
-      : "Paste a scoped Gmail OAuth access token. Orbit creates drafts only and never sends email without you reviewing it.";
-  connectorToken.placeholder = provider === "openai" ? "sk-..." : "Paste a scoped access token";
-  notionParentRow.hidden = !notion;
-  disconnectConnector.hidden = !connected;
-  connectorToken.focus();
+function toggleSettings() {
+  if (connections.hidden) {
+    connections.hidden = false;
+    answer.hidden = true;
+    window.orbit.setFollow(false);
+    setState("settings", 265);
+    loadConnectors();
+  } else closeSettings();
 }
 
-function closeConnectorSetup() {
-  connectorSetup.hidden = true;
+function closeSettings() {
+  connections.hidden = true;
+  connectorForm.hidden = true;
   selectedConnector = undefined;
+  setState(answer.hidden ? "ready" : "answer", answer.hidden ? 164 : 320);
+}
+
+function openConnectorForm(provider, connected) {
+  selectedConnector = provider;
+  connectorForm.hidden = false;
   connectorToken.value = "";
   notionParent.value = "";
+  const name = provider === "openai" ? "OpenAI" : provider === "notion" ? "Notion" : "Gmail";
+  connectorTitle.firstChild.textContent = `${connected ? "Manage" : "Connect"} ${name}`;
+  connectorToken.placeholder = provider === "openai" ? "sk-..." : "access token";
+  notionParentRow.hidden = provider !== "notion";
+  disconnectConnector.hidden = !connected;
+  setState("settings", provider === "notion" ? 370 : 320);
+  connectorToken.focus();
 }
 
 async function saveSelectedConnector() {
   if (!selectedConnector) return;
   saveConnector.disabled = true;
   try {
-    renderConnectors(await window.orbit.saveConnector({ provider: selectedConnector, token: connectorToken.value, parentPageId: notionParent.value }));
-    closeConnectorSetup();
-    screenStatus.textContent = `${selectedConnector === "openai" ? "OpenAI" : selectedConnector === "notion" ? "Notion" : "Gmail"} is connected on this computer.`;
+    const status = await window.orbit.saveConnector({ provider: selectedConnector, token: connectorToken.value, parentPageId: notionParent.value });
+    renderConnectors(status);
+    if (selectedConnector === "openai") liveVoice = true;
+    connectorForm.hidden = true;
+    hoverLine.textContent = `${selectedConnector} connected.`;
+    setState("settings", 265);
   } catch (error) {
-    screenStatus.textContent = error.message || "That connection could not be saved.";
+    hoverLine.textContent = error.message || "Connection could not be saved.";
   } finally {
     saveConnector.disabled = false;
   }
@@ -124,10 +139,12 @@ async function disconnectSelectedConnector() {
   if (!selectedConnector) return;
   try {
     renderConnectors(await window.orbit.disconnectConnector(selectedConnector));
-    closeConnectorSetup();
-    screenStatus.textContent = "Connector disconnected.";
+    if (selectedConnector === "openai") liveVoice = false;
+    connectorForm.hidden = true;
+    hoverLine.textContent = `${selectedConnector} disconnected.`;
+    setState("settings", 265);
   } catch (error) {
-    screenStatus.textContent = error.message || "That connector could not be disconnected.";
+    hoverLine.textContent = error.message || "Connection could not be removed.";
   }
 }
 
@@ -136,37 +153,61 @@ async function submit() {
   if (!request) return prompt.focus();
   ask.disabled = true;
   voice.disabled = true;
-  ask.textContent = mode === "agent" ? "Planning..." : "Looking...";
+  answer.hidden = true;
+  connections.hidden = true;
+  hoverLine.textContent = mode === "agent" ? "On it. Building a safe plan..." : "On it. Looking at this screen...";
+  setState("thinking", 164);
   try {
     const result = await window.orbit.ask({ request, mode });
     steps = result.steps || [];
     currentAgent = result.agent || undefined;
-    answer.hidden = false;
-    answerMode.textContent = result.demo ? `${mode === "agent" ? "AGENT PLAN" : "ORBIT TALK"} · LOCAL` : (mode === "agent" ? "AGENT PLAN" : "ORBIT TALK");
-    answerText.innerHTML = format(result.text);
-    agentNote.hidden = mode !== "agent";
-    draw.hidden = !steps.length;
-    agentAction.hidden = !currentAgent;
-    if (currentAgent) {
-      agentActionDetail.textContent = currentAgent.detail;
-      approveAgent.textContent = currentAgent.approvalLabel;
-    }
-    screenStatus.textContent = result.demo ? "Demo answer — add OPENAI_API_KEY for live screen reasoning and transcription." : "Live screen answer ready.";
-    if (mode === "coach") speak(result.text);
+    presentAnswer(result);
   } catch (error) {
-    answer.hidden = false;
-    answerText.textContent = error.message || "Orbit could not answer that.";
+    hoverLine.textContent = error.message || "Orbit could not answer that.";
+    setState("ready", 164);
   } finally {
     ask.disabled = false;
     voice.disabled = false;
-    ask.innerHTML = mode === "agent" ? "Start agent <span>↵</span>" : "Talk to Orbit <span>↵</span>";
   }
+}
+
+function presentAnswer(result) {
+  answer.hidden = false;
+  answerMode.textContent = result.mode === "agent" ? "agent plan" : result.demo ? "orbit demo" : "orbit";
+  answerText.textContent = result.text;
+  agentAction.hidden = !currentAgent;
+  if (currentAgent) {
+    agentActionDetail.textContent = currentAgent.detail;
+    approveAgent.textContent = currentAgent.approvalLabel;
+    approveAgent.hidden = false;
+  }
+  hoverLine.textContent = result.mode === "agent" ? "Plan ready. Orbit has not changed anything." : "Answer ready. Ask Orbit to guide you through it.";
+  window.orbit.setFollow(false);
+  setState("answer", currentAgent ? 390 : 320);
+  if (result.mode === "coach") speak(result.text);
+}
+
+async function showGuide() {
+  if (!steps.length) return;
+  const shown = await window.orbit.draw({ steps });
+  if (shown) hint.textContent = "Ctrl + Shift + G moves through the guide";
+}
+
+function resetToAsk() {
+  prompt.value = "";
+  answer.hidden = true;
+  currentAgent = undefined;
+  hoverLine.textContent = "Orbit is following your cursor. Ask about what you point at.";
+  hint.innerHTML = "<kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Space</kbd> capture &middot; Orbit follows while active";
+  setState("ready", 164);
+  window.orbit.setFollow(true);
+  prompt.focus();
 }
 
 async function runApprovedAgent() {
   if (!currentAgent) return;
   approveAgent.disabled = true;
-  approveAgent.textContent = "Running...";
+  approveAgent.textContent = "running";
   try {
     const result = await window.orbit.approveAgent(currentAgent.id);
     agentActionDetail.textContent = result.message;
@@ -176,8 +217,8 @@ async function runApprovedAgent() {
       link.href = result.url;
       link.target = "_blank";
       link.rel = "noreferrer";
-      link.textContent = "Open it";
-      agentActionDetail.append(" ", link);
+      link.textContent = " Open it";
+      agentActionDetail.append(link);
     }
   } catch (error) {
     agentActionDetail.textContent = error.message || "Orbit could not run that action.";
@@ -186,18 +227,13 @@ async function runApprovedAgent() {
   }
 }
 
-function format(value) {
-  const escaped = String(value).replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[char]);
-  return escaped.replace(/\n/g, "<br>").replace(/(^|<br>)(\d+[.)]\s.*?)(?=<br>|$)/g, "$1<strong>$2</strong>");
-}
-
 async function startVoice() {
   if (activeRecorder?.state === "recording") { activeRecorder.stop(); return; }
   if (!liveVoice || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return startBrowserSpeechRecognition();
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const preferred = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"].find((type) => MediaRecorder.isTypeSupported(type));
-    const recorder = new MediaRecorder(stream, preferred ? { mimeType: preferred } : undefined);
+    const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"].find((type) => MediaRecorder.isTypeSupported(type));
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
     const chunks = [];
     activeRecorder = recorder;
     recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
@@ -205,39 +241,35 @@ async function startVoice() {
       stream.getTracks().forEach((track) => track.stop());
       activeRecorder = undefined;
       voice.disabled = true;
-      voice.textContent = "Transcribing...";
+      voice.textContent = "...";
       try {
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
-        const spoken = await window.orbit.transcribe({ base64: await blobToBase64(blob), mimeType: blob.type });
-        handleSpoken(spoken);
+        handleSpoken(await window.orbit.transcribe({ base64: await blobToBase64(blob), mimeType: blob.type }));
       } catch (error) {
-        screenStatus.textContent = error.message || "I couldn't transcribe that. Try again.";
+        hoverLine.textContent = error.message || "I couldn't transcribe that.";
       } finally {
         voice.disabled = false;
-        voice.textContent = "◉ Speak";
+        voice.innerHTML = "&#9673;";
       }
     };
     recorder.start();
-    voice.textContent = "Stop recording";
-    screenStatus.textContent = "Listening. Click Stop recording when you finish.";
+    voice.textContent = "stop";
+    hoverLine.textContent = "Listening. Press the circle again when you finish.";
   } catch (error) {
-    screenStatus.textContent = error.name === "NotAllowedError" ? "Microphone permission was denied." : "I couldn't start the microphone.";
+    hoverLine.textContent = error.name === "NotAllowedError" ? "Microphone permission was denied." : "I couldn't start the microphone.";
   }
 }
 
 function startBrowserSpeechRecognition() {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Recognition) {
-    screenStatus.textContent = "Voice needs an OpenAI API key or this runtime's speech-recognition service. Type your request instead.";
-    return;
-  }
+  if (!Recognition) { hoverLine.textContent = "Connect OpenAI to use voice, or type your question."; return; }
   const recognition = new Recognition();
   recognition.lang = navigator.language || "en-US";
   recognition.interimResults = false;
-  voice.textContent = "Listening...";
+  voice.textContent = "...";
   recognition.onresult = (event) => handleSpoken(event.results[0][0].transcript);
-  recognition.onerror = () => { screenStatus.textContent = "I didn't catch that. Try speaking again or type your request."; };
-  recognition.onend = () => { voice.textContent = "◉ Speak"; };
+  recognition.onerror = () => { hoverLine.textContent = "I didn't catch that. Try again."; };
+  recognition.onend = () => { voice.innerHTML = "&#9673;"; };
   recognition.start();
 }
 
@@ -245,9 +277,7 @@ function handleSpoken(spoken) {
   if (/^(orbit|hey\s*orbit|hey\s*clicky)\s+agent/i.test(spoken)) {
     setMode("agent");
     prompt.value = spoken.replace(/^(orbit|hey\s*orbit|hey\s*clicky)\s+agent[:,]?\s*/i, "");
-  } else {
-    prompt.value = spoken;
-  }
+  } else prompt.value = spoken;
   submit();
 }
 
@@ -263,7 +293,7 @@ function blobToBase64(blob) {
 function speak(text) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(String(text).replace(/\d+[.)]/g, ""));
+  const utterance = new SpeechSynthesisUtterance(String(text));
   utterance.rate = 1.05;
   window.speechSynthesis.speak(utterance);
 }

@@ -3,29 +3,30 @@
 ## Paste-ready entry
 
 - **Name:** Orbit
-- **Tagline:** Press a hotkey, ask about any app, and get a guide drawn on the screen.
+- **Tagline:** A second cursor that sees your current screen, teaches the next step, and launches approval-first agents.
 - **Category:** Work & Productivity
 - **Built with:** Codex, GPT-5.6, OpenAI Responses API, OpenAI speech-to-text, Electron, JavaScript, HTML/CSS
 
 ## Description
 
-Orbit is an in-the-moment desktop companion for the exact instant a person gets stuck. In FL Studio, Claude Code, a browser, or any unfamiliar app, press `Ctrl` + `Shift` + `Space`. Orbit captures that current display once, opens a small temporary conversation, and lets the person ask a question naturally by voice or text. It can then draw a concise, click-through guide on top of the screen to point out the next steps.
+Orbit is a cursor-native desktop companion for the instant a person gets stuck. In FL Studio, Claude Code, a browser, or another unfamiliar app, press `Ctrl` + `Shift` + `Space`. Orbit captures that current display once and appears as a small second cursor beside the real pointer. As the person moves, Orbit can identify the accessible control under the pointer, so the interaction stays grounded in the actual interface instead of a detached chat window.
 
-Orbit has two intentionally different modes. **Talk** is a conversation about the current screen: it explains what is visible and gives short, practical steps. **Agents** turns a natural-language task into an approval-first plan. After an in-app connection, an approved Notion agent can create a page and an approved Gmail agent can create a draft. Gmail is deliberately draft-only; no agent sends mail or performs an external action without a separate approval click.
+In **Talk**, a person asks a question by voice or text. GPT-5.6 reasons over the explicit hotkey capture and returns a short response plus screen coordinates for the important next steps. Choosing **Guide me** draws a click-through target ring, guide cursor, and instruction bubble directly over the app; `Ctrl` + `Shift` + `G` advances through the steps.
 
-The privacy boundary is central to the product. Orbit is absent while the person works. It does not continuously watch the screen and it does not use a cursor-following overlay. The display is captured only after the hotkey, Orbit hides itself before that capture, and the image stays in memory only for the open Orbit session. The “Show me on screen” layer appears only on explicit request and does not receive clicks.
+**Agent** mode turns a request into an approval-first task. It can consult current public information when necessary, then proposes connected actions. With a test Notion connection, an approved agent can create a child page; with a scoped Gmail OAuth token, it can create a draft. It never sends email or takes an external action without a distinct approval click.
 
-With an in-app OpenAI connection, Orbit sends the explicit hotkey capture to GPT-5.6 through the Responses API and transcribes push-to-talk voice with `gpt-4o-mini-transcribe`. Keys stay in the Electron main process and are saved through the operating system's encrypted credential store.
+Privacy is a product feature: Orbit is inactive and invisible until the user presses the hotkey. The screen image exists only for that active session and is cleared on close. Hover inspection reads only the Windows text accessibility label while the companion is active; it is not a continuous image capture.
 
-Orbit is an original name, visual system, and implementation inspired by the product category, not an affiliated or branded Heyclicky clone.
+Orbit is an original name, visual system, and implementation inspired by the screen-native assistant category, not an affiliated or branded Heyclicky clone.
 
 ## Judge testing notes
 
-1. Run `npm install` and `npm start` in this directory, or use `dist\Orbit 0.3.0.exe` after building.
-2. Press `Ctrl` + `Shift` + `Space` while another application is visible.
-3. In **Talk**, ask what to do next. Choose **Show me on screen** to see the temporary guidance layer.
-4. In **Agents**, describe a task. Connect Notion or Gmail from the in-app chips to exercise the approval UI. Use test credentials and a test parent page; Gmail actions create drafts only.
-5. For live visual reasoning and OpenAI transcription, use the in-app **OpenAI · connect** chip before testing.
+1. Run `npm install` and `npm start` in this directory, or use `dist\Orbit 0.4.0.exe` after building.
+2. Place another application on screen and press `Ctrl` + `Shift` + `Space`.
+3. Move the pointer over controls to see Orbit's compact hover context, then ask a Talk question and choose **Guide me**.
+4. Press `Ctrl` + `Shift` + `G` to advance the guide. Press `Esc` to close it and clear the active session.
+5. Switch to **Agent** and ask for a task. Use the settings gear to connect test Notion or Gmail credentials; actions require approval and Gmail only creates drafts.
+6. For live visual reasoning and OpenAI transcription, use the in-app OpenAI connection before testing.
 
 ## Final submission fields to add yourself
 

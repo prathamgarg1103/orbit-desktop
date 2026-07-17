@@ -1,3 +1,20 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="guidance.css"><title>Orbit guidance</title></head>
-<body><div id="stage"><div id="target"><span></span><i></i></div><section id="callout"><p>ORBIT · ON SCREEN</p><h1 id="step-title"></h1><div id="step-list"></div><small>Press Esc to dismiss</small></section></div><script src="guidance.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Orbit guide</title>
+  <link rel="stylesheet" href="guidance.css">
+</head>
+<body>
+  <div id="target" class="target"><div class="pulse"></div></div>
+  <div id="guide-cursor" class="guide-cursor" aria-hidden="true"><span></span><i></i></div>
+  <section id="callout" class="callout">
+    <p id="counter">ORBIT GUIDE</p>
+    <h1 id="step-title">Start here</h1>
+    <p id="step-detail"></p>
+    <small id="shortcut">Esc when you are ready</small>
+  </section>
+  <script src="guidance.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 {
   "name": "orbit-desktop",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "A hotkey-activated, screen-aware desktop AI buddy that teaches and launches approval-first agents.",
   "main": "main.cjs",
@@ -19,6 +19,9 @@
     "productName": "Orbit",
     "icon": "build/orbit.ico",
     "asar": true,
+    "asarUnpack": [
+      "uia-worker.ps1"
+    ],
     "compression": "store",
     "files": [
       "**/*",

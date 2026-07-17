@@ -1,23 +1,23 @@
 # Orbit
 
-Orbit is an original, hotkey-activated desktop companion for getting unstuck in any app. It is a feature-level homage to the useful category Heyclicky demonstrates; it does not reuse Heyclicky's name, artwork, copy, or code.
+Orbit is an original Windows desktop companion for getting unstuck inside any app. It is inspired by the screen-native assistant category, but uses its own name, visual system, copy, and implementation.
 
-Press `Ctrl` + `Shift` + `Space` from FL Studio, Claude Code, a browser, or any other desktop tool. Orbit captures the current display once, opens a temporary companion, and lets you either Talk about what is on screen or start an Agent task.
+Press `Ctrl` + `Shift` + `Space` from FL Studio, Claude Code, a browser, or any other desktop tool. Orbit captures that display once, then appears as a small second cursor beside your real one. As you move, it can identify the accessible control under the pointer. Ask by voice or text and it gives a concise response plus coordinate-aware next steps that it can draw directly on the current screen.
 
 ## What works
 
-- **Talk:** Ask a spoken or typed question about the display. With the in-app OpenAI connection, Orbit sends that single hotkey-authorized image to the Responses API and returns spoken, numbered guidance.
-- **Show me on screen:** Choose this after an answer and Orbit draws a temporary, click-through callout layer with the steps. Nothing follows the cursor while you work.
-- **Agents:** Describe a task normally or begin a voice request with “Orbit agent.” The agent makes a plan and waits for an explicit approval before an external effect.
-- **Notion:** In the UI, paste a Notion integration token and an allowed parent-page ID. An approved agent can create a child page there.
-- **Gmail:** In the UI, paste a scoped Gmail OAuth access token. An approved agent can create a Gmail draft; it never sends email.
-- **Voice:** With a configured OpenAI key, the Speak button records push-to-talk audio and transcribes it with `gpt-4o-mini-transcribe`. Without one, Chromium speech recognition is used when available.
+- **Cursor-native companion:** Orbit is absent until the hotkey. While a session is active, its compact companion follows beside the real pointer and reads the text-only Windows accessibility label under it.
+- **Talk:** Ask a spoken or typed question about the hotkey-authorized screen. With an in-app OpenAI connection, Orbit sends that single image to the Responses API and returns a structured answer with up to four screen targets.
+- **Guide on screen:** Choose **Guide me** to show a temporary, click-through guide cursor, target ring, and instruction bubble. Press `Ctrl` + `Shift` + `G` for the next step.
+- **Agents:** Describe a task naturally, or begin a voice request with `Orbit agent`. Agent mode can use current public web information when needed, then proposes any Gmail or Notion action for explicit approval.
+- **Notion and Gmail:** Paste a Notion integration token with an allowed parent page, or a scoped Gmail OAuth access token, in the in-app settings. Approved agents create a Notion child page or Gmail draft; Orbit never sends email.
+- **Voice:** With OpenAI connected, Orbit records push-to-talk audio and transcribes it with `gpt-4o-mini-transcribe`. Chromium speech recognition is used as a local fallback when available.
 
-## Privacy model
+## Privacy boundary
 
-Orbit never captures the desktop in the background or keeps a floating pointer overlay. It captures only after the global hotkey, hides itself before the capture, and holds the resulting image only while that Orbit session is open. `Esc` or the close button dismisses the session and clears the in-memory image. The annotation layer is created only when you choose **Show me on screen** and is click-through.
+Orbit does not watch or record the screen in the background. It captures the display only after the hotkey, hides itself before capture, and clears that in-memory image when the session is closed. The text-only hover label is queried only while the companion is active; it is not a screenshot stream. `Esc` dismisses the guide first, then Orbit and its screen context.
 
-Connector credentials are stored through Electron `safeStorage`, which uses the operating system's encrypted credential service. The app does not put them in renderer code or source control.
+Connector credentials are stored through Electron `safeStorage`, using the operating system's encrypted credential service. They are not placed in renderer code or source control.
 
 ## Run from source
 
@@ -27,22 +27,23 @@ npm install
 npm start
 ```
 
-Use the **OpenAI · connect** chip inside Orbit to store an API key through your operating system's encrypted credential service — no terminal is required. Developers may instead set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` before launching. The basic hotkey, local demonstration response, temporary drawing overlay, connector setup, and approval UI can all be inspected without a key; live screen reasoning and OpenAI transcription need one.
+Use the gear button in Orbit to connect OpenAI without a terminal. Developers can instead set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` before launching. The hotkey, cursor companion, local demonstration response, on-screen guide, hover inspection, and approval UI can be tested without a key; live visual reasoning and OpenAI transcription need one.
 
 ## Controls
 
-- `Ctrl` + `Shift` + `Space` — capture the current display and open Orbit.
-- `Esc` — dismiss an on-screen guide first, then dismiss Orbit and clear the screen context.
-- **Speak** — press to begin voice input; press again to stop recording when live transcription is configured.
+- `Ctrl` + `Shift` + `Space` — capture the current display and activate Orbit.
+- `Ctrl` + `Shift` + `G` — advance to the next on-screen guide step.
+- `Esc` — dismiss the guide, then Orbit and its in-memory screen context.
+- **Voice button** — start and stop a spoken request.
 
-## Build a portable Windows app
+## Package a portable Windows app
 
 ```powershell
 npm run check
 npm run dist
 ```
 
-The portable artifact is written to `dist\Orbit 0.3.0.exe`.
+The portable artifact is written to `dist\Orbit 0.4.0.exe`.
 
 ## Submission material
 

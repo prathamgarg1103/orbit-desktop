@@ -4,34 +4,34 @@
 
 Show FL Studio, Claude Code, or another dense tool.
 
-Voiceover: “When I get stuck in an app, I usually need to stop, take a screenshot, open another chat, and explain the context. Orbit gives me help at the moment I am already working.”
+Voiceover: “When I get stuck in an app, I normally stop, screenshot it, open another chat, and explain the context. Orbit gives me help while I am still in the tool.”
 
-## 0:20–0:50 — Hotkey and Talk
+## 0:20–0:55 — The second cursor
 
-Show a normal app, press `Ctrl` + `Shift` + `Space`, then ask a relevant question with Speak or type it.
+Show a normal app, press `Ctrl` + `Shift` + `Space`, and move the real pointer over a few controls.
 
-Voiceover: “Orbit is invisible while I work. I press one hotkey and it captures this moment only. Now I can Talk naturally about what is on my screen.”
+Voiceover: “Orbit is invisible while I work. I press one hotkey and it captures this moment only. Then it becomes a small second cursor beside my pointer. It reads the accessible label of what I am pointing at, so I can simply ask about the part of the app that has me stuck.”
 
-## 0:50–1:20 — Draw guidance
+## 0:55–1:25 — Talk and guiding
 
-Show the answer, then click **Show me on screen**. Point out that the annotation is temporary and click-through. Press `Esc` to hide it.
+Ask a relevant question with the voice button or type it. Click **Guide me** and advance with `Ctrl` + `Shift` + `G`.
 
-Voiceover: “If a written answer is not enough, I ask Orbit to show me. It draws the next steps on the current screen, then gets out of the way. It is never a cursor follower or a background screen recorder.”
+Voiceover: “Talk is the conversation. GPT-5.6 uses the one hotkey-authorized screen image and returns the next steps. If words are not enough, Orbit points at the real interface with a guide cursor, target ring, and step-by-step callouts.”
 
-## 1:20–1:55 — Agents and voice
+## 1:25–1:55 — Agents and voice
 
-Switch to **Agents**. Say or type: “Orbit agent, create a Notion page called launch ideas with these notes.” Show the plan and the explicit approval button.
+Switch to **Agent**. Say or type: “Orbit agent, create a Notion page called launch ideas with these notes.” Show the plan and explicit approval button.
 
-Voiceover: “Talk is the conversation. Agents are tasks. I can start an agent with my voice and Orbit turns the request into a safe plan. Nothing external happens until I approve it.”
+Voiceover: “Agents are tasks. I can spawn one with my voice. Orbit may use current public information when the task needs it, but any connected action waits for my approval.”
 
-## 1:55–2:25 — Connectors
+## 1:55–2:25 — Connectors and safety
 
-Click the Notion or Gmail chip. Show the in-app setup UI and, with a safe test account, approve a Notion page creation or Gmail draft.
+Open the settings gear. Show the Notion or Gmail setup and, with safe test credentials, approve a Notion page or Gmail draft.
 
-Voiceover: “Connections are configured in the app, not through a terminal. Tokens are kept in the operating system’s encrypted store. Notion creates a page only after approval, and Gmail always creates a draft instead of sending.”
+Voiceover: “Connections are configured in the app, not a terminal. Credentials use the operating system’s encrypted store. Notion creates a page only after approval, and Gmail creates a draft rather than sending mail.”
 
-## 2:25–2:45 — OpenAI and Codex
+## 2:25–2:45 — Privacy and implementation
 
-Show `main.cjs`, `preload.cjs`, the Responses call, and `README.md`.
+Press `Esc`, then show `main.cjs`, `uia-worker.ps1`, and `guidance.js`.
 
-Voiceover: “I built Orbit with Codex. GPT-5.6 reasons over the one hotkey-authorized screen capture; OpenAI speech-to-text handles push-to-talk voice. Codex helped build the Electron architecture, privacy boundary, drawing layer, and approval-first agents.”
+Voiceover: “Orbit does not continuously record my screen. The image exists only for the active hotkey session; the small hover label is text-only and only runs while Orbit is active. I built it with Codex, Electron, GPT-5.6, OpenAI’s Responses API, and OpenAI speech-to-text.”
