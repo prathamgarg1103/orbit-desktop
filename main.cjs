@@ -1,4 +1,4 @@
-const { app, BrowserWindow, desktopCapturer, globalShortcut, ipcMain, safeStorage, screen } = require("electron");
+const { app, BrowserWindow, desktopCapturer, globalShortcut, ipcMain, safeStorage, screen, shell } = require("electron");
 const { execFile } = require("node:child_process");
 const { randomUUID } = require("node:crypto");
 const fs = require("node:fs");
@@ -130,6 +130,14 @@ async function refreshCloudConnectors() {
   const profile = await cloudRequest("/v1/me");
   cloudConnectorState = { gmail: Boolean(profile.connectors?.gmail), notion: Boolean(profile.connectors?.notion) };
   return cloudConnectorState;
+}
+
+async function startCloudOAuth(provider) {
+  if (!["gmail", "notion"].includes(provider)) throw new Error("That OAuth connector is not available.");
+  const result = await cloudRequest(`/v1/oauth/${provider}/start`, { method: "POST", body: {} });
+  if (!result.authorizationUrl) throw new Error("Orbit Cloud did not return an authorization URL.");
+  await shell.openExternal(result.authorizationUrl);
+  return { started: true };
 }
 
 function saveConnectorCredentials(next) {
@@ -397,11 +405,15 @@ ipcMain.handle("companion:saveConnector", async (_event, payload) => {
       await refreshCloudConnectors();
     } else saveConnectorCredentials({ gmailAccessToken: token });
   } else if (provider === "notion") {
-    if (!token || !parentPageId) throw new Error("Notion needs both an integration token and a parent page ID.");
+    if (!parentPageId) throw new Error("Notion needs a parent page ID for creating agent pages.");
     if (cloudConfig()) {
-      await cloudRequest("/v1/connectors/notion", { method: "PUT", body: { accessToken: token, metadata: { parentPageId } } });
+      if (token) await cloudRequest("/v1/connectors/notion", { method: "PUT", body: { accessToken: token, metadata: { parentPageId } } });
+      else await cloudRequest("/v1/connectors/notion", { method: "PATCH", body: { metadata: { parentPageId } } });
       await refreshCloudConnectors();
-    } else saveConnectorCredentials({ notionToken: token, notionParentPageId: parentPageId });
+    } else {
+      if (!token) throw new Error("Notion needs both an integration token and a parent page ID.");
+      saveConnectorCredentials({ notionToken: token, notionParentPageId: parentPageId });
+    }
   } else {
     throw new Error("That connector is not available.");
   }
@@ -437,6 +449,7 @@ ipcMain.handle("companion:approveAgent", async (_event, taskId) => {
 });
 ipcMain.handle("companion:transcribe", async (_event, payload) => transcribeAudio(payload));
 ipcMain.handle("companion:draw", async (_event, payload) => showGuidance(payload?.steps));
+ipcMain.handle("companion:startOAuth", async (_event, provider) => startCloudOAuth(String(provider || "")));
 
 function displayForContext() {
   return screen.getAllDisplays().find((item) => item.id === latestContext?.displayId)
@@ -623,7 +636,7 @@ async function createNotionPage(action) {
   if (!credentials.notionToken || !credentials.notionParentPageId) throw new Error("Notion is no longer connected.");
   const response = await fetch("https://api.notion.com/v1/pages", {
     method: "POST",
-    headers: { Authorization: `Bearer ${credentials.notionToken}`, "Notion-Version": "2022-06-28", "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${credentials.notionToken}`, "Notion-Version": "2026-03-11", "Content-Type": "application/json" },
     body: JSON.stringify({
       parent: { page_id: credentials.notionParentPageId },
       properties: { title: { title: [{ text: { content: action.title } }] } },

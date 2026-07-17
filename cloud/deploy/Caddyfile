@@ -1,0 +1,4 @@
+{$ORBIT_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy cloud:8787
+}

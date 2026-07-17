@@ -41,7 +41,16 @@ export class OrbitDatabase {
         image_bytes INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS oauth_states (
+        nonce TEXT PRIMARY KEY,
+        device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+        provider TEXT NOT NULL,
+        encrypted_verifier TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        created_at TEXT NOT NULL
+      );
       CREATE INDEX IF NOT EXISTS usage_events_by_device_created ON usage_events(device_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS oauth_states_by_expiry ON oauth_states(expires_at);
     `);
   }
 
@@ -82,6 +91,23 @@ export class OrbitDatabase {
 
   deleteConnection(deviceId, provider) {
     return this.db.prepare("DELETE FROM connections WHERE device_id = ? AND provider = ?").run(deviceId, provider).changes > 0;
+  }
+
+  updateConnectionMetadata(deviceId, provider, metadata) {
+    if (!PROVIDERS.has(provider)) throw new Error("Unsupported connector provider.");
+    const result = this.db.prepare("UPDATE connections SET metadata_json = ?, updated_at = ? WHERE device_id = ? AND provider = ?")
+      .run(JSON.stringify(metadata || {}).slice(0, 8_000), now(), deviceId, provider);
+    return result.changes > 0;
+  }
+
+  createOAuthState({ nonce, deviceId, provider, encryptedVerifier, expiresAt }) {
+    this.db.prepare("DELETE FROM oauth_states WHERE expires_at < ?").run(Date.now());
+    this.db.prepare("INSERT INTO oauth_states (nonce, device_id, provider, encrypted_verifier, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(nonce, deviceId, provider, encryptedVerifier, expiresAt, now());
+  }
+
+  consumeOAuthState(nonce) {
+    return this.db.prepare("DELETE FROM oauth_states WHERE nonce = ? RETURNING nonce, device_id AS deviceId, provider, encrypted_verifier AS encryptedVerifier, expires_at AS expiresAt").get(nonce);
   }
 
   connectorStatus(deviceId) {

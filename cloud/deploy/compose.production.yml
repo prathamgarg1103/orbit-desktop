@@ -1,0 +1,46 @@
+services:
+  cloud:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      ORBIT_HOST: 0.0.0.0
+      ORBIT_PORT: 8787
+      ORBIT_DATABASE_PATH: /data/orbit-cloud.sqlite
+    volumes:
+      - orbit-cloud-data:/data
+    restart: unless-stopped
+    networks: [orbit]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2.8-alpine
+    environment:
+      ORBIT_DOMAIN: ${ORBIT_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    depends_on:
+      cloud:
+        condition: service_healthy
+    networks: [orbit]
+
+volumes:
+  orbit-cloud-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  orbit:

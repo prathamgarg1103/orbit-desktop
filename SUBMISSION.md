@@ -21,7 +21,7 @@ Orbit is an original name, visual system, and implementation inspired by the scr
 
 ## Judge testing notes
 
-1. Run `npm install` and `npm start` in this directory, or use `dist\Orbit 0.5.0.exe` after building.
+1. Run `npm install` and `npm start` in this directory, or use `dist\Orbit 0.6.0.exe` after building.
 2. Place another application on screen and press `Ctrl` + `Shift` + `Space`.
 3. Move the pointer over controls to see Orbit's compact hover context, then ask a Talk question and choose **Guide me**.
 4. Press `Ctrl` + `Shift` + `G` to advance the guide. Press `Esc` to close it and clear the active session.

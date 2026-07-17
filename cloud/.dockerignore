@@ -1,0 +1,9 @@
+node_modules
+data
+.env
+.env.*
+!*.example
+test
+scripts
+README.md
+DEPLOY.md

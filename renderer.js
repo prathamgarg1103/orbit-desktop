@@ -24,6 +24,7 @@ const notionParentRow = document.querySelector("#notion-parent-row");
 const notionParent = document.querySelector("#notion-parent");
 const saveConnector = document.querySelector("#save-connector");
 const disconnectConnector = document.querySelector("#disconnect-connector");
+const oauthConnector = document.querySelector("#oauth-connector");
 
 let mode = "coach";
 let steps = [];
@@ -31,6 +32,7 @@ let currentAgent;
 let selectedConnector;
 let liveVoice = false;
 let activeRecorder;
+let cloudConnected = false;
 
 document.querySelector("#close").onclick = () => window.orbit.close();
 document.querySelector("#settings").onclick = toggleSettings;
@@ -43,6 +45,7 @@ again.onclick = resetToAsk;
 approveAgent.onclick = runApprovedAgent;
 saveConnector.onclick = saveSelectedConnector;
 disconnectConnector.onclick = disconnectSelectedConnector;
+oauthConnector.onclick = startSelectedOAuth;
 connectorRow.onclick = (event) => {
   const button = event.target.closest("[data-connector]");
   if (button) openConnectorForm(button.dataset.connector, button.dataset.connected === "true");
@@ -85,6 +88,7 @@ async function loadConnectors() {
 }
 
 function renderConnectors(connectors) {
+  cloudConnected = Boolean(connectors.cloud);
   connectorRow.innerHTML = [["Cloud", "cloud", connectors.cloud], ["OpenAI", "openai", connectors.openai], ["Gmail", "gmail", connectors.gmail], ["Notion", "notion", connectors.notion]].map(([name, provider, connected]) => `<button class="connector ${connected ? "connected" : ""}" data-connector="${provider}" data-connected="${connected}"><i></i>${name}</button>`).join("");
   if (!connectors.secureStorage) hoverLine.textContent = "Secure system storage is unavailable, so connections cannot be saved.";
 }
@@ -115,11 +119,27 @@ function openConnectorForm(provider, connected) {
   const name = provider === "cloud" ? "Orbit Cloud" : provider === "openai" ? "OpenAI" : provider === "notion" ? "Notion" : "Gmail";
   connectorTitle.firstChild.textContent = `${connected ? "Manage" : "Connect"} ${name}`;
   connectorToken.placeholder = provider === "cloud" ? "pairing code" : provider === "openai" ? "sk-..." : "access token";
+  if (provider === "notion" && cloudConnected && connected) connectorToken.placeholder = "leave blank to keep Cloud OAuth token";
   cloudUrlRow.hidden = provider !== "cloud";
   notionParentRow.hidden = provider !== "notion";
+  oauthConnector.hidden = !(cloudConnected && ["gmail", "notion"].includes(provider));
+  oauthConnector.textContent = `connect ${name} in browser`;
   disconnectConnector.hidden = !connected;
   setState("settings", provider === "notion" || provider === "cloud" ? 370 : 320);
   (provider === "cloud" ? cloudUrl : connectorToken).focus();
+}
+
+async function startSelectedOAuth() {
+  if (!["gmail", "notion"].includes(selectedConnector)) return;
+  oauthConnector.disabled = true;
+  try {
+    await window.orbit.startOAuth(selectedConnector);
+    hoverLine.textContent = "Browser opened. Approve access there, then reopen this connector to finish its settings.";
+  } catch (error) {
+    hoverLine.textContent = error.message || "Orbit could not start the browser connection.";
+  } finally {
+    oauthConnector.disabled = false;
+  }
 }
 
 async function saveSelectedConnector() {

@@ -23,7 +23,7 @@ async function createNotionPage(action, accessToken, metadata) {
   const content = sanitizeText(action.content, 6_000) || "Orbit agent brief";
   const response = await fetch("https://api.notion.com/v1/pages", {
     method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}`, "Notion-Version": "2022-06-28", "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${accessToken}`, "Notion-Version": "2026-03-11", "Content-Type": "application/json" },
     body: JSON.stringify({
       parent: { page_id: parentPageId },
       properties: { title: { title: [{ text: { content: title } }] } },

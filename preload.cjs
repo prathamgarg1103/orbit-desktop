@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("orbit", {
   saveConnector: (payload) => ipcRenderer.invoke("companion:saveConnector", payload),
   disconnectConnector: (provider) => ipcRenderer.invoke("companion:disconnectConnector", provider),
   approveAgent: (taskId) => ipcRenderer.invoke("companion:approveAgent", taskId),
+  startOAuth: (provider) => ipcRenderer.invoke("companion:startOAuth", provider),
   transcribe: (payload) => ipcRenderer.invoke("companion:transcribe", payload),
   onOpened: (callback) => ipcRenderer.on("companion:opened", (_event, payload) => callback(payload)),
   onError: (callback) => ipcRenderer.on("companion:error", (_event, message) => callback(message)),

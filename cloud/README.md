@@ -18,7 +18,7 @@ Node 22.13+ is required because the service uses the built-in SQLite driver. Put
 
 ## Pair a desktop
 
-`POST /v1/device-sessions` accepts the server's short-lived `ORBIT_BOOTSTRAP_CODE` and returns a revocable desktop access token. Store the resulting endpoint and token in Orbit's **Cloud** connection. Rotate the bootstrap code after pairing.
+`POST /v1/device-sessions` accepts the server's short-lived `ORBIT_BOOTSTRAP_CODE` and returns a revocable desktop access token. Orbit's **Cloud** connection does this pairing from the app, so the raw device token never needs to be copied through the renderer. Rotate the bootstrap code after pairing.
 
 ## APIs
 
@@ -27,9 +27,10 @@ Node 22.13+ is required because the service uses the built-in SQLite driver. Put
 - `GET /v1/me` and `GET /v1/usage` — device status and aggregate counters.
 - `POST /v1/screen-guides` — one hotkey-authorized image, structured visual guidance, no screen persistence.
 - `PUT` / `DELETE /v1/connectors/gmail|notion` — encrypted server-side connector credentials.
+- `POST /v1/oauth/gmail|notion/start` and `/oauth/:provider/callback` — browser OAuth handoff with signed, one-time state. Gmail uses PKCE and encrypted refresh tokens.
 - `POST /v1/actions/execute` — executes a desktop-approved Gmail draft or Notion page using the server-stored connector.
 
-OAuth redirect handlers are deliberately not enabled until Google and Notion application credentials plus production callback URLs are set. The encrypted connector endpoints make the desktop-to-server boundary functional today; OAuth is the next deployment configuration step, not a fake button.
+OAuth is enabled only when a public HTTPS URL and the provider application credentials are configured. The desktop's **connect in browser** button then opens the real provider consent flow. See [production deployment](DEPLOY.md) for the exact redirect URLs and compliance boundary.
 
 ## Verify
 

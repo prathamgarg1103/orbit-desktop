@@ -1,8 +1,9 @@
 import http from "node:http";
 import { executeApprovedAction } from "./agent-actions.mjs";
 import { HttpError, asHttpError } from "./errors.mjs";
+import { activeConnection, completeOAuth, oauthErrorPage, startOAuth } from "./oauth.mjs";
 import { createScreenGuide } from "./screen-guide.mjs";
-import { hash, issueAccessToken, safeEqual, seal, unseal } from "./security.mjs";
+import { hash, issueAccessToken, safeEqual, seal } from "./security.mjs";
 
 const MAX_JSON_BYTES = 14 * 1024 * 1024;
 const PROVIDERS = new Set(["gmail", "notion"]);
@@ -16,6 +17,11 @@ function sendJson(response, status, body) {
     "Referrer-Policy": "no-referrer"
   });
   response.end(JSON.stringify(body));
+}
+
+function sendHtml(response, status, html) {
+  response.writeHead(status, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'", "Referrer-Policy": "no-referrer", "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY" });
+  response.end(html);
 }
 
 async function readJson(request) {
@@ -70,14 +76,6 @@ function createRateLimiter(config) {
   };
 }
 
-function connectionFor(database, device, provider, encryptionKey) {
-  const stored = database.getConnection(device.id, provider);
-  if (!stored) throw new HttpError(409, `Connect ${provider === "gmail" ? "Gmail" : "Notion"} in Orbit Cloud before approving this action.`, "connector_required");
-  let metadata = {};
-  try { metadata = JSON.parse(stored.metadataJson || "{}"); } catch { metadata = {}; }
-  return { accessToken: unseal(stored.accessToken, encryptionKey), refreshToken: stored.refreshToken ? unseal(stored.refreshToken, encryptionKey) : "", metadata };
-}
-
 export function createOrbitServer({ config, database }) {
   const limit = createRateLimiter(config);
   return http.createServer(async (request, response) => {
@@ -85,6 +83,18 @@ export function createOrbitServer({ config, database }) {
       checkOrigin(request, config);
       const url = new URL(request.url || "/", "http://orbit.local");
       const path = url.pathname;
+      const callbackMatch = /^\/oauth\/(gmail|notion)\/callback$/.exec(path);
+      if (callbackMatch && request.method === "GET") {
+        if (url.searchParams.get("error")) return sendHtml(response, 400, oauthErrorPage(url.searchParams.get("error_description") || url.searchParams.get("error")));
+        try {
+          const code = stringValue(url.searchParams.get("code"), "authorization code", 4_000);
+          const html = await completeOAuth({ provider: callbackMatch[1], state: url.searchParams.get("state"), code, config, database });
+          return sendHtml(response, 200, html.html);
+        } catch (error) {
+          const safe = asHttpError(error);
+          return sendHtml(response, safe.status, oauthErrorPage(safe.message));
+        }
+      }
       if (request.method === "GET" && path === "/health") {
         return sendJson(response, 200, { ok: true, service: "orbit-cloud", openaiConfigured: Boolean(config.openaiApiKey), now: new Date().toISOString() });
       }
@@ -103,6 +113,12 @@ export function createOrbitServer({ config, database }) {
       if (request.method === "GET" && path === "/v1/usage") {
         const device = authenticate(request, database);
         return sendJson(response, 200, { usage: database.usageSummary(device.id) });
+      }
+      const oauthStartMatch = /^\/v1\/oauth\/(gmail|notion)\/start$/.exec(path);
+      if (oauthStartMatch && request.method === "POST") {
+        const device = authenticate(request, database);
+        limit(device.id);
+        return sendJson(response, 200, startOAuth({ provider: oauthStartMatch[1], deviceId: device.id, config, database }));
       }
       if (request.method === "POST" && path === "/v1/screen-guides") {
         const device = authenticate(request, database);
@@ -129,6 +145,13 @@ export function createOrbitServer({ config, database }) {
         });
         return sendJson(response, 200, { connectors: database.connectorStatus(device.id) });
       }
+      if (connectorMatch && request.method === "PATCH") {
+        const device = authenticate(request, database);
+        const body = await readJson(request);
+        const metadata = body.metadata && typeof body.metadata === "object" ? body.metadata : {};
+        if (!database.updateConnectionMetadata(device.id, connectorMatch[1], metadata)) throw new HttpError(409, "Connect this provider in the browser before saving its settings.", "connector_required");
+        return sendJson(response, 200, { connectors: database.connectorStatus(device.id) });
+      }
       if (connectorMatch && request.method === "DELETE") {
         const device = authenticate(request, database);
         database.deleteConnection(device.id, connectorMatch[1]);
@@ -141,7 +164,7 @@ export function createOrbitServer({ config, database }) {
         const action = body.action;
         const provider = action?.kind === "gmail_draft" ? "gmail" : action?.kind === "notion_create_page" ? "notion" : "";
         if (!PROVIDERS.has(provider)) throw new HttpError(400, "Orbit does not support that approved action.", "unsupported_action");
-        const result = await executeApprovedAction({ action, connection: connectionFor(database, device, provider, config.encryptionKey) });
+        const result = await executeApprovedAction({ action, connection: await activeConnection({ provider, deviceId: device.id, config, database }) });
         database.recordUsage(device.id, { kind: "approved_action" });
         return sendJson(response, 200, result);
       }
