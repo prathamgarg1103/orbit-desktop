@@ -162,7 +162,7 @@ export function createDiyaServer({ config, database }) {
         const invited = safeEqual(code, config.bootstrapCode) ? null : database.consumeInvite(hash(code));
         if (!safeEqual(code, config.bootstrapCode) && !invited) throw new HttpError(401, "The enrollment code is not valid.", "invalid_enrollment_code");
         const accessToken = issueAccessToken();
-        const device = database.createDevice({ name: String(body.deviceName || "Diya desktop").slice(0, 100), tokenHash: hash(accessToken) });
+        const device = database.createDevice({ name: String(body.deviceName || "Diya desktop").slice(0, 100), tokenHash: hash(accessToken), enrollmentInviteId: invited?.id || null });
         return sendJson(response, 201, { accessToken, device, enrollment: invited ? { source: "invite", label: invited.label } : { source: "bootstrap" } });
       }
       if (request.method === "GET" && path === "/v1/me") {

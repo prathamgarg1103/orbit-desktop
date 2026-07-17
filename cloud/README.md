@@ -46,7 +46,7 @@ The command returns the decrypted email and raw code only once for the operator 
 
 ## Beta feedback
 
-After pairing Diya Cloud, a beta user can open **Settings** and deliberately send a short bug report, product idea, or general note. This request authenticates with the desktop's revocable device token, contains no screenshot or prompt content, and is encrypted at rest before it is stored. Review it only from the Cloud host:
+After pairing Diya Cloud, a beta user can open **Settings** and deliberately send a short bug report, product idea, or general note. This request authenticates with the desktop's revocable device token, contains no screenshot or prompt content, and is encrypted at rest before it is stored. When that desktop was enrolled through a waitlist invite, the operator review lists the beta email alongside the feedback so you can follow up; other devices remain identified only by device ID. Review it only from the Cloud host:
 
 ```bash
 npm run admin -- feedback list --status new

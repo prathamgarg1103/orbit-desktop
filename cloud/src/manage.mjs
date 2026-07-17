@@ -108,9 +108,10 @@ export function runAdmin({ args = process.argv.slice(2), env = process.env, writ
     }
     if (resource === "feedback" && action === "list") {
       const status = option(options, "status") || "";
-      const feedback = database.listFeedbackEntries(status).map(({ encryptedMessage, ...entry }) => ({
+      const feedback = database.listFeedbackEntries(status).map(({ encryptedMessage, encryptedEmail, ...entry }) => ({
         ...entry,
-        message: unseal(encryptedMessage, config.encryptionKey)
+        message: unseal(encryptedMessage, config.encryptionKey),
+        ...(encryptedEmail ? { email: unseal(encryptedEmail, config.encryptionKey) } : {})
       }));
       const result = { feedback };
       write(JSON.stringify(result, null, 2));

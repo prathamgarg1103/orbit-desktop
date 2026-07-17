@@ -19,6 +19,7 @@ export class DiyaDatabase {
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         token_hash TEXT NOT NULL UNIQUE,
+        enrollment_invite_id TEXT,
         created_at TEXT NOT NULL,
         last_seen_at TEXT NOT NULL,
         revoked_at TEXT
@@ -65,6 +66,7 @@ export class DiyaDatabase {
         encrypted_email TEXT NOT NULL,
         source TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'requested',
+        invite_id TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -83,12 +85,20 @@ export class DiyaDatabase {
       CREATE INDEX IF NOT EXISTS waitlist_entries_by_status_created ON waitlist_entries(status, created_at DESC);
       CREATE INDEX IF NOT EXISTS feedback_entries_by_status_created ON feedback_entries(status, created_at DESC);
     `);
+    this.ensureColumn("devices", "enrollment_invite_id", "TEXT");
+    this.ensureColumn("waitlist_entries", "invite_id", "TEXT");
+    this.db.exec("CREATE INDEX IF NOT EXISTS devices_by_enrollment_invite ON devices(enrollment_invite_id); CREATE INDEX IF NOT EXISTS waitlist_entries_by_invite ON waitlist_entries(invite_id);");
   }
 
-  createDevice({ name, tokenHash }) {
-    const device = { id: newId(), name: String(name).slice(0, 100) || "Diya desktop", tokenHash, createdAt: now() };
-    this.db.prepare("INSERT INTO devices (id, name, token_hash, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)")
-      .run(device.id, device.name, device.tokenHash, device.createdAt, device.createdAt);
+  ensureColumn(table, column, definition) {
+    const columns = this.db.prepare(`PRAGMA table_info(${table})`).all();
+    if (!columns.some((entry) => entry.name === column)) this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+
+  createDevice({ name, tokenHash, enrollmentInviteId = null }) {
+    const device = { id: newId(), name: String(name).slice(0, 100) || "Diya desktop", tokenHash, enrollmentInviteId: enrollmentInviteId ? String(enrollmentInviteId) : null, createdAt: now() };
+    this.db.prepare("INSERT INTO devices (id, name, token_hash, enrollment_invite_id, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(device.id, device.name, device.tokenHash, device.enrollmentInviteId, device.createdAt, device.createdAt);
     return { id: device.id, name: device.name, createdAt: device.createdAt };
   }
 
@@ -211,7 +221,7 @@ export class DiyaDatabase {
       if (entry.status === "invited") throw new Error("This waitlist entry has already received an invite.");
       this.db.prepare("INSERT INTO invites (id, label, code_hash, max_uses, uses, expires_at, created_at) VALUES (?, ?, ?, ?, 0, ?, ?)")
         .run(invite.id, invite.label, invite.codeHash, invite.maxUses, invite.expiresAt, invite.createdAt);
-      this.db.prepare("UPDATE waitlist_entries SET status = 'invited', updated_at = ? WHERE id = ?").run(invite.createdAt, entry.id);
+      this.db.prepare("UPDATE waitlist_entries SET status = 'invited', invite_id = ?, updated_at = ? WHERE id = ?").run(invite.id, invite.createdAt, entry.id);
       this.db.exec("COMMIT");
       transactionOpen = false;
       return {
@@ -272,8 +282,22 @@ export class DiyaDatabase {
   listFeedbackEntries(status = "") {
     const filter = String(status || "").trim();
     return filter
-      ? this.db.prepare("SELECT id, device_id AS deviceId, category, encrypted_message AS encryptedMessage, status, created_at AS createdAt, updated_at AS updatedAt FROM feedback_entries WHERE status = ? ORDER BY created_at DESC").all(filter)
-      : this.db.prepare("SELECT id, device_id AS deviceId, category, encrypted_message AS encryptedMessage, status, created_at AS createdAt, updated_at AS updatedAt FROM feedback_entries ORDER BY created_at DESC").all();
+      ? this.db.prepare(`
+        SELECT feedback.id, feedback.device_id AS deviceId, feedback.category, feedback.encrypted_message AS encryptedMessage, feedback.status, feedback.created_at AS createdAt, feedback.updated_at AS updatedAt,
+          devices.enrollment_invite_id AS enrollmentInviteId, waitlist.encrypted_email AS encryptedEmail
+        FROM feedback_entries AS feedback
+        JOIN devices ON devices.id = feedback.device_id
+        LEFT JOIN waitlist_entries AS waitlist ON waitlist.invite_id = devices.enrollment_invite_id
+        WHERE feedback.status = ? ORDER BY feedback.created_at DESC
+      `).all(filter)
+      : this.db.prepare(`
+        SELECT feedback.id, feedback.device_id AS deviceId, feedback.category, feedback.encrypted_message AS encryptedMessage, feedback.status, feedback.created_at AS createdAt, feedback.updated_at AS updatedAt,
+          devices.enrollment_invite_id AS enrollmentInviteId, waitlist.encrypted_email AS encryptedEmail
+        FROM feedback_entries AS feedback
+        JOIN devices ON devices.id = feedback.device_id
+        LEFT JOIN waitlist_entries AS waitlist ON waitlist.invite_id = devices.enrollment_invite_id
+        ORDER BY feedback.created_at DESC
+      `).all();
   }
 
   updateFeedbackStatus(id, status) {

@@ -54,7 +54,7 @@ docker compose -f compose.production.yml exec -T cloud node src/manage.mjs waitl
 
 Copy the printed code to the matching email address. It is one-use, expires after the chosen period, and is rejected if the same waitlist record is invited again.
 
-Review intentionally submitted beta feedback on that same server. Each note is encrypted at rest and has no screen image attached:
+Review intentionally submitted beta feedback on that same server. Each note is encrypted at rest and has no screen image attached. For a device enrolled through a waitlist invite, the result also includes that beta email for operator follow-up:
 
 ```bash
 docker compose -f compose.production.yml exec -T cloud node src/manage.mjs feedback list --status new

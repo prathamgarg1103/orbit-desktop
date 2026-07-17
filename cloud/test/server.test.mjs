@@ -4,7 +4,7 @@ import http from "node:http";
 import test from "node:test";
 import { DiyaDatabase } from "../src/database.mjs";
 import { createDiyaServer } from "../src/server.mjs";
-import { hash, unseal } from "../src/security.mjs";
+import { hash, seal, unseal } from "../src/security.mjs";
 
 function listen(server) {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(`http://127.0.0.1:${server.address().port}`)));
@@ -67,20 +67,27 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     const paired = await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ bootstrapCode: config.bootstrapCode, deviceName: "Test desktop" }) });
     assert.equal(paired.status, 201);
     const inviteCode = "diya_invite_one-time-test-code";
-    database.createInvite({ label: "test cohort", codeHash: hash(inviteCode), maxUses: 1 });
+    const invitedWaitlistEntry = database.upsertWaitlistEntry({
+      emailHash: hash("invited.beta@example.com"),
+      encryptedEmail: seal("invited.beta@example.com", config.encryptionKey),
+      source: "launch-page"
+    });
+    database.createWaitlistInvite({ waitlistId: invitedWaitlistEntry.id, label: "test cohort", codeHash: hash(inviteCode), expiresAt: new Date(Date.now() + 60_000).toISOString() });
     const invited = await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ enrollmentCode: inviteCode, deviceName: "Invited desktop" }) });
     assert.equal(invited.status, 201);
     assert.equal(invited.body.enrollment.source, "invite");
     assert.equal((await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ enrollmentCode: inviteCode }) })).status, 401);
     const token = paired.body.accessToken;
     const auth = { Authorization: `Bearer ${token}` };
-    const feedback = await request(cloudUrl, "/v1/feedback", { method: "POST", headers: auth, body: JSON.stringify({ category: "idea", message: "A keyboard shortcut reference would make the guide easier to learn." }) });
+    const inviteAuth = { Authorization: `Bearer ${invited.body.accessToken}` };
+    const feedback = await request(cloudUrl, "/v1/feedback", { method: "POST", headers: inviteAuth, body: JSON.stringify({ category: "idea", message: "A keyboard shortcut reference would make the guide easier to learn." }) });
     assert.equal(feedback.status, 202);
     assert.equal(feedback.body.accepted, true);
     const storedFeedback = database.listFeedbackEntries();
     assert.equal(storedFeedback.length, 1);
     assert.equal(storedFeedback[0].encryptedMessage.includes("keyboard shortcut"), false);
     assert.equal(unseal(storedFeedback[0].encryptedMessage, config.encryptionKey), "A keyboard shortcut reference would make the guide easier to learn.");
+    assert.equal(unseal(storedFeedback[0].encryptedEmail, config.encryptionKey), "invited.beta@example.com");
     assert.equal((await request(cloudUrl, "/v1/feedback", { method: "POST", headers: auth, body: JSON.stringify({ category: "wrong", message: "nope" }) })).status, 400);
     const connected = await request(cloudUrl, "/v1/connectors/notion", { method: "PUT", headers: auth, body: JSON.stringify({ accessToken: "secret-notion-token", metadata: { parentPageId: "page-123" } }) });
     assert.equal(connected.body.connectors.notion, true);
