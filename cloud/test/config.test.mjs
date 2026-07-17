@@ -41,3 +41,11 @@ test("rejects a non-Postgres managed database URL", () => {
     DIYA_DATABASE_URL: "https://database.example.com"
   }), /DIYA_DATABASE_URL/);
 });
+
+test("requires a managed database URL in Vercel", () => {
+  assert.throws(() => loadConfig({
+    VERCEL: "1",
+    DIYA_ENCRYPTION_KEY: key(),
+    DIYA_BOOTSTRAP_CODE: "diya-bootstrap-code-with-enough-length"
+  }), /DIYA_DATABASE_URL must be configured for Vercel deployment/);
+});

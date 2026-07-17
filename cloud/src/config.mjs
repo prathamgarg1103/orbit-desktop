@@ -69,6 +69,9 @@ export function loadConfig(env = process.env) {
 
   const databasePath = String(environmentValue(env, "DIYA_DATABASE_PATH") || "./data/diya-cloud.sqlite").trim();
   const databaseUrl = normalizedDatabaseUrl(environmentValue(env, "DIYA_DATABASE_URL"));
+  if (env.VERCEL && !databaseUrl) {
+    throw new HttpError(500, "DIYA_DATABASE_URL must be configured for Vercel deployment.", "configuration_error");
+  }
   const model = String(environmentValue(env, "DIYA_MODEL") || "gpt-5.6").trim();
   const publicUrl = normalizedPublicUrl(environmentValue(env, "DIYA_PUBLIC_URL"));
   return Object.freeze({
