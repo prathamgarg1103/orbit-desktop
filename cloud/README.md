@@ -16,6 +16,14 @@ npm start
 
 Node 22.13+ is required because the service uses the built-in SQLite driver. Put Diya Cloud behind HTTPS in production; the desktop's Electron main process communicates directly with it, so browser CORS is disabled unless you explicitly set `DIYA_ALLOWED_ORIGINS`. Existing `ORBIT_*` server variables remain accepted during a transition, but new deployments should use `DIYA_*`.
 
+Before inviting anyone, run the secret-safe deployment preflight after loading your real environment:
+
+```powershell
+npm run preflight
+```
+
+It validates the configuration contract, database migrations, server-side OpenAI key presence, public HTTPS URL/domain alignment, and optional OAuth configuration. It never prints secret values or contacts third-party services.
+
 ## Enroll an early-access desktop
 
 Create a one-time, revocable invite on the server:

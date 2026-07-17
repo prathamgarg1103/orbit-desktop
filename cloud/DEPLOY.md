@@ -31,8 +31,18 @@ Put the four provider values in `.env` as `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUT
 
 ## 3. Launch
 
+Run the deployment preflight first. It uses the same container environment and persistent database volume as Cloud, but does not make a network request or print secrets:
+
 ```bash
 cd cloud/deploy
+docker compose -f compose.production.yml --env-file ../.env run --rm cloud node src/preflight.mjs
+```
+
+Fix every required failed check before continuing. Gmail and Notion OAuth may remain `not configured` if they are not part of the first beta.
+
+Then launch the stack:
+
+```bash
 docker compose -f compose.production.yml --env-file ../.env up -d --build
 docker compose -f compose.production.yml logs -f
 ```
