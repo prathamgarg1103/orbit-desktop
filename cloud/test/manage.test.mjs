@@ -16,7 +16,7 @@ function adminEnvironment(databasePath) {
   };
 }
 
-test("issues, lists, and revokes a one-time invite without retaining its raw code", () => {
+test("issues, lists, revokes, and safely converts waitlist requests into one-time invites", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "diya-cloud-admin-"));
   const environment = adminEnvironment(path.join(directory, "cloud.sqlite"));
   try {
@@ -41,12 +41,24 @@ test("issues, lists, and revokes a one-time invite without retaining its raw cod
       encryptedEmail: seal("hello@example.com", key),
       source: "launch-page"
     });
+    database.upsertWaitlistEntry({
+      emailHash: keyedHash("decline@example.com", key),
+      encryptedEmail: seal("decline@example.com", key),
+      source: "launch-page"
+    });
     database.close();
-    const waitlist = runAdmin({ args: ["waitlist", "list"], env: environment, write: () => {} });
-    assert.equal(waitlist.waitlist[0].email, "hello@example.com");
-    const updated = runAdmin({ args: ["waitlist", "set-status", "--id", waitlist.waitlist[0].id, "--status", "invited"], env: environment, write: () => {} });
-    assert.equal(updated.updated, true);
+    const waitlist = runAdmin({ args: ["waitlist", "list"], env: environment, write: () => {} }).waitlist;
+    const hello = waitlist.find((entry) => entry.email === "hello@example.com");
+    const declined = waitlist.find((entry) => entry.email === "decline@example.com");
+    const markedDeclined = runAdmin({ args: ["waitlist", "set-status", "--id", declined.id, "--status", "declined"], env: environment, write: () => {} });
+    assert.equal(markedDeclined.updated, true);
+    assert.equal(runAdmin({ args: ["waitlist", "set-status", "--id", declined.id, "--status", "requested"], env: environment, write: () => {} }).updated, true);
+    const converted = runAdmin({ args: ["waitlist", "invite", "--id", hello.id, "--label", "first waitlist beta", "--expires-days", "14"], env: environment, write: () => {} });
+    assert.equal(converted.email, "hello@example.com");
+    assert.match(converted.code, /^diya_invite_/);
+    assert.equal(converted.invite.maxUses, 1);
     assert.equal(runAdmin({ args: ["waitlist", "list", "--status", "invited"], env: environment, write: () => {} }).waitlist.length, 1);
+    assert.throws(() => runAdmin({ args: ["waitlist", "invite", "--id", hello.id], env: environment, write: () => {} }), /already received an invite/);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }

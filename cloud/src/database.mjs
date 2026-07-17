@@ -177,6 +177,43 @@ export class DiyaDatabase {
     return this.db.prepare("UPDATE invites SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL").run(now(), String(id)).changes > 0;
   }
 
+  createWaitlistInvite({ waitlistId, label, codeHash, expiresAt = null }) {
+    const expiration = expiresAt ? new Date(expiresAt) : null;
+    if (expiration && Number.isNaN(expiration.getTime())) throw new Error("Invite expiration must be a valid date.");
+    const invite = {
+      id: newId(),
+      label: String(label || "waitlist beta").trim().slice(0, 120) || "waitlist beta",
+      codeHash: String(codeHash),
+      maxUses: 1,
+      expiresAt: expiration ? expiration.toISOString() : null,
+      createdAt: now()
+    };
+    let transactionOpen = false;
+    try {
+      this.db.exec("BEGIN IMMEDIATE");
+      transactionOpen = true;
+      const entry = this.db.prepare(`
+        SELECT id, encrypted_email AS encryptedEmail, source, status, created_at AS createdAt, updated_at AS updatedAt
+        FROM waitlist_entries WHERE id = ?
+      `).get(String(waitlistId));
+      if (!entry) throw new Error("This waitlist entry no longer exists.");
+      if (entry.status === "declined") throw new Error("This waitlist entry was declined and cannot be invited.");
+      if (entry.status === "invited") throw new Error("This waitlist entry has already received an invite.");
+      this.db.prepare("INSERT INTO invites (id, label, code_hash, max_uses, uses, expires_at, created_at) VALUES (?, ?, ?, ?, 0, ?, ?)")
+        .run(invite.id, invite.label, invite.codeHash, invite.maxUses, invite.expiresAt, invite.createdAt);
+      this.db.prepare("UPDATE waitlist_entries SET status = 'invited', updated_at = ? WHERE id = ?").run(invite.createdAt, entry.id);
+      this.db.exec("COMMIT");
+      transactionOpen = false;
+      return {
+        entry: { ...entry, status: "invited", updatedAt: invite.createdAt },
+        invite: { id: invite.id, label: invite.label, maxUses: 1, uses: 0, expiresAt: invite.expiresAt, createdAt: invite.createdAt, revokedAt: null }
+      };
+    } catch (error) {
+      if (transactionOpen) this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
   upsertWaitlistEntry({ emailHash, encryptedEmail, source = "launch-page" }) {
     const timestamp = now();
     return this.db.prepare(`
@@ -198,7 +235,14 @@ export class DiyaDatabase {
   }
 
   updateWaitlistStatus(id, status) {
-    return this.db.prepare("UPDATE waitlist_entries SET status = ?, updated_at = ? WHERE id = ?").run(String(status), now(), String(id)).changes > 0;
+    const nextStatus = String(status);
+    if (nextStatus === "declined") {
+      return this.db.prepare("UPDATE waitlist_entries SET status = ?, updated_at = ? WHERE id = ? AND status = 'requested'").run(nextStatus, now(), String(id)).changes > 0;
+    }
+    if (nextStatus === "requested") {
+      return this.db.prepare("UPDATE waitlist_entries SET status = ?, updated_at = ? WHERE id = ? AND status = 'declined'").run(nextStatus, now(), String(id)).changes > 0;
+    }
+    throw new Error("Waitlist status must be requested or declined.");
   }
 
   connectorStatus(deviceId) {

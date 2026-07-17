@@ -45,12 +45,14 @@ docker compose -f compose.production.yml exec -T cloud node src/manage.mjs invit
 
 Share the printed code privately. It is one-time by default, stored only as a hash, and can be revoked with `invite revoke --id <invite-id>`. Each enrolled desktop gets its own revocable opaque token.
 
-Review beta requests only from the server where the encryption key is available:
+Review beta requests only from the server where the encryption key is available, then turn an accepted request into its one-time desktop enrollment code in the same workflow:
 
 ```bash
-docker compose -f compose.production.yml exec -T cloud node src/manage.mjs waitlist list
-docker compose -f compose.production.yml exec -T cloud node src/manage.mjs waitlist set-status --id <entry-id> --status invited
+docker compose -f compose.production.yml exec -T cloud node src/manage.mjs waitlist list --status requested
+docker compose -f compose.production.yml exec -T cloud node src/manage.mjs waitlist invite --id <entry-id> --label "beta user" --expires-days 30
 ```
+
+Copy the printed code to the matching email address. It is one-use, expires after the chosen period, and is rejected if the same waitlist record is invited again.
 
 ## 4. Operate safely
 

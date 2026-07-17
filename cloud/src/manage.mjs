@@ -28,7 +28,8 @@ function commandHelp() {
     "  npm run admin -- invite list",
     "  npm run admin -- invite revoke --id <invite-id>",
     "  npm run admin -- waitlist list [--status requested]",
-    "  npm run admin -- waitlist set-status --id <entry-id> --status invited"
+    "  npm run admin -- waitlist invite --id <entry-id> [--label <name>] [--expires-days 30]",
+    "  npm run admin -- waitlist set-status --id <entry-id> --status declined"
   ].join("\n");
 }
 
@@ -74,11 +75,31 @@ export function runAdmin({ args = process.argv.slice(2), env = process.env, writ
       write(JSON.stringify(result, null, 2));
       return result;
     }
+    if (resource === "waitlist" && action === "invite") {
+      const id = option(options, "id");
+      if (!id) throw new Error("waitlist invite needs --id <entry-id>.");
+      const expiresDays = integerOption(options, "expires-days", 30, 1, 365);
+      const code = issueInviteCode();
+      const issued = database.createWaitlistInvite({
+        waitlistId: id,
+        label: option(options, "label") || "waitlist beta",
+        codeHash: hash(code),
+        expiresAt: new Date(Date.now() + expiresDays * 24 * 60 * 60 * 1000).toISOString()
+      });
+      const result = {
+        email: unseal(issued.entry.encryptedEmail, config.encryptionKey),
+        invite: issued.invite,
+        code,
+        warning: "Copy this code now. Diya Cloud stores only its hash and cannot show it again."
+      };
+      write(JSON.stringify(result, null, 2));
+      return result;
+    }
     if (resource === "waitlist" && action === "set-status") {
       const id = option(options, "id");
       const status = option(options, "status");
       if (!id) throw new Error("waitlist set-status needs --id <entry-id>.");
-      if (!new Set(["requested", "invited", "declined"]).has(status)) throw new Error("waitlist status must be requested, invited, or declined.");
+      if (!new Set(["requested", "declined"]).has(status)) throw new Error("Use waitlist invite to issue an invite; waitlist status can otherwise be requested or declined.");
       const result = { id, status, updated: database.updateWaitlistStatus(id, status) };
       write(JSON.stringify(result, null, 2));
       return result;

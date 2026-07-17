@@ -35,14 +35,14 @@ npm run admin -- invite revoke --id <invite-id>
 
 The deployed Cloud URL also serves Diya's public launch page at `/` and a concise privacy page at `/privacy`. Its built-in form posts to `/v1/waitlist`; no third-party form service receives the email. Each request is rate limited, normalized, encrypted at rest, and keyed-hashed to prevent duplicate rows without exposing an email index.
 
-Only an operator with the Cloud encryption key can reveal the email through the local server CLI:
+Only an operator with the Cloud encryption key can reveal the email through the local server CLI. To onboard a request, use the dedicated handoff command: it atomically marks the request invited and produces exactly one revocable enrollment code.
 
 ```bash
-npm run admin -- waitlist list
-npm run admin -- waitlist set-status --id <entry-id> --status invited
+npm run admin -- waitlist list --status requested
+npm run admin -- waitlist invite --id <entry-id> --label "first beta user" --expires-days 30
 ```
 
-Use a one-time desktop invite when you decide to onboard a person. The waitlist status is for your beta workflow; it does not automatically grant Cloud access.
+The command returns the decrypted email and raw code only once for the operator to send privately. A second invite for the same request is rejected. Mark an unqualified request as declined, or restore it to requested, with `waitlist set-status --id <entry-id> --status declined|requested`.
 
 ## APIs
 
