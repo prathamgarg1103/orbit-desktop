@@ -54,6 +54,13 @@ docker compose -f compose.production.yml exec -T cloud node src/manage.mjs waitl
 
 Copy the printed code to the matching email address. It is one-use, expires after the chosen period, and is rejected if the same waitlist record is invited again.
 
+Review intentionally submitted beta feedback on that same server. Each note is encrypted at rest and has no screen image attached:
+
+```bash
+docker compose -f compose.production.yml exec -T cloud node src/manage.mjs feedback list --status new
+docker compose -f compose.production.yml exec -T cloud node src/manage.mjs feedback set-status --id <feedback-id> --status reviewed
+```
+
 ## 4. Operate safely
 
 - Back up the `diya-cloud-data` Docker volume and the encryption key together; the database is not useful without the key.

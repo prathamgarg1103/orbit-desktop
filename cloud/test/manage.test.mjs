@@ -46,6 +46,12 @@ test("issues, lists, revokes, and safely converts waitlist requests into one-tim
       encryptedEmail: seal("decline@example.com", key),
       source: "launch-page"
     });
+    const feedbackDevice = database.createDevice({ name: "Beta feedback desktop", tokenHash: "feedback-token-hash" });
+    database.createFeedback({
+      deviceId: feedbackDevice.id,
+      category: "bug",
+      encryptedMessage: seal("The hover label did not update in one app.", key)
+    });
     database.close();
     const waitlist = runAdmin({ args: ["waitlist", "list"], env: environment, write: () => {} }).waitlist;
     const hello = waitlist.find((entry) => entry.email === "hello@example.com");
@@ -59,6 +65,10 @@ test("issues, lists, revokes, and safely converts waitlist requests into one-tim
     assert.equal(converted.invite.maxUses, 1);
     assert.equal(runAdmin({ args: ["waitlist", "list", "--status", "invited"], env: environment, write: () => {} }).waitlist.length, 1);
     assert.throws(() => runAdmin({ args: ["waitlist", "invite", "--id", hello.id], env: environment, write: () => {} }), /already received an invite/);
+    const feedback = runAdmin({ args: ["feedback", "list"], env: environment, write: () => {} }).feedback;
+    assert.equal(feedback[0].message, "The hover label did not update in one app.");
+    assert.equal(runAdmin({ args: ["feedback", "set-status", "--id", feedback[0].id, "--status", "reviewed"], env: environment, write: () => {} }).updated, true);
+    assert.equal(runAdmin({ args: ["feedback", "list", "--status", "reviewed"], env: environment, write: () => {} }).feedback.length, 1);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }

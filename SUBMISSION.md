@@ -15,13 +15,13 @@ In **Talk**, a person asks a question by voice or text. GPT-5.6 reasons over the
 
 **Agent** mode turns a request into an approval-first task. It can consult current public information when necessary, then proposes connected actions. With a test Notion connection, an approved agent can create a child page; with a scoped Gmail OAuth token, it can create a draft. It never sends email or takes an external action without a distinct approval click.
 
-Privacy is a product feature: Diya is inactive and invisible until the user presses the hotkey. The screen image exists only for that active session and is cleared on close. Hover inspection reads only the Windows text accessibility label while the companion is active; it is not a continuous image capture. The optional Diya Cloud service keeps the product OpenAI key and connector tokens out of the desktop process, encrypts connector values at rest, records only aggregate usage counters, and sends one screen image to the API with response storage disabled.
+Privacy is a product feature: Diya is inactive and invisible until the user presses the hotkey. The screen image exists only for that active session and is cleared on close. Hover inspection reads only the Windows text accessibility label while the companion is active; it is not a continuous image capture. The optional Diya Cloud service keeps the product OpenAI key and connector tokens out of the desktop process, encrypts connector values at rest, records only aggregate usage counters, and sends one screen image to the API with response storage disabled. An enrolled beta user can deliberately submit a feedback note from Settings; that note is encrypted at rest and never includes a screen capture.
 
 Diya is an original name, visual system, and implementation inspired by the screen-native assistant category, not an affiliated or branded Heyclicky clone.
 
 ## Judge testing notes
 
-1. Run `npm install` and `npm start` in this directory, or use `dist\Diya 0.9.1.exe` after building.
+1. Run `npm install` and `npm start` in this directory, or use `dist\Diya 0.10.0.exe` after building.
 2. Place another application on screen and press `Ctrl` + `Shift` + `Space`.
 3. Move the pointer over controls with only Diya's second cursor visible. Press the hotkey again to ask a Talk question, then choose **Guide me**.
 4. Press `Ctrl` + `Shift` + `G` to advance the guide. Press `Esc` to close it and clear the active session.

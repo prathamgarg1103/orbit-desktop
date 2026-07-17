@@ -29,13 +29,15 @@ function commandHelp() {
     "  npm run admin -- invite revoke --id <invite-id>",
     "  npm run admin -- waitlist list [--status requested]",
     "  npm run admin -- waitlist invite --id <entry-id> [--label <name>] [--expires-days 30]",
-    "  npm run admin -- waitlist set-status --id <entry-id> --status declined"
+    "  npm run admin -- waitlist set-status --id <entry-id> --status declined",
+    "  npm run admin -- feedback list [--status new]",
+    "  npm run admin -- feedback set-status --id <feedback-id> --status reviewed"
   ].join("\n");
 }
 
 export function runAdmin({ args = process.argv.slice(2), env = process.env, write = (value) => process.stdout.write(`${value}\n`) } = {}) {
   const [resource, action, ...options] = args;
-  if (!new Set(["invite", "waitlist"]).has(resource) || !action) throw new Error(commandHelp());
+  if (!new Set(["invite", "waitlist", "feedback"]).has(resource) || !action) throw new Error(commandHelp());
   const config = loadConfig(env);
   const database = new DiyaDatabase(config.databasePath);
   try {
@@ -101,6 +103,25 @@ export function runAdmin({ args = process.argv.slice(2), env = process.env, writ
       if (!id) throw new Error("waitlist set-status needs --id <entry-id>.");
       if (!new Set(["requested", "declined"]).has(status)) throw new Error("Use waitlist invite to issue an invite; waitlist status can otherwise be requested or declined.");
       const result = { id, status, updated: database.updateWaitlistStatus(id, status) };
+      write(JSON.stringify(result, null, 2));
+      return result;
+    }
+    if (resource === "feedback" && action === "list") {
+      const status = option(options, "status") || "";
+      const feedback = database.listFeedbackEntries(status).map(({ encryptedMessage, ...entry }) => ({
+        ...entry,
+        message: unseal(encryptedMessage, config.encryptionKey)
+      }));
+      const result = { feedback };
+      write(JSON.stringify(result, null, 2));
+      return result;
+    }
+    if (resource === "feedback" && action === "set-status") {
+      const id = option(options, "id");
+      const status = option(options, "status");
+      if (!id) throw new Error("feedback set-status needs --id <feedback-id>.");
+      if (!new Set(["new", "reviewed", "resolved"]).has(status)) throw new Error("feedback status must be new, reviewed, or resolved.");
+      const result = { id, status, updated: database.updateFeedbackStatus(id, status) };
       write(JSON.stringify(result, null, 2));
       return result;
     }

@@ -456,6 +456,13 @@ ipcMain.handle("companion:disconnectConnector", async (_event, provider) => {
   else throw new Error("That connector is not available.");
   return connectorStatus();
 });
+ipcMain.handle("companion:sendFeedback", async (_event, payload) => {
+  if (!cloudConfig()) throw new Error("Pair Diya Cloud before sending beta feedback.");
+  const message = String(payload?.message || "").trim().slice(0, 2_000);
+  if (!message) throw new Error("Write a short note before sending feedback.");
+  const category = ["bug", "idea", "general"].includes(payload?.category) ? payload.category : "general";
+  return cloudRequest("/v1/feedback", { method: "POST", body: { message, category } });
+});
 ipcMain.handle("companion:ask", async (_event, payload) => {
   const request = String(payload?.request || "").trim().slice(0, 1500);
   const mode = payload?.mode === "agent" ? "agent" : "coach";

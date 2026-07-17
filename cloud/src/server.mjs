@@ -8,6 +8,7 @@ import { hash, issueAccessToken, keyedHash, safeEqual, seal } from "./security.m
 
 const MAX_JSON_BYTES = 14 * 1024 * 1024;
 const PROVIDERS = new Set(["gmail", "notion"]);
+const FEEDBACK_CATEGORIES = new Set(["bug", "idea", "general"]);
 
 function sendJson(response, status, body) {
   response.writeHead(status, {
@@ -63,6 +64,12 @@ function normalizedEmail(value) {
     throw new HttpError(400, "Enter a valid email address.", "invalid_email");
   }
   return email;
+}
+
+function feedbackCategory(value) {
+  const category = String(value || "general").trim().toLowerCase();
+  if (!FEEDBACK_CATEGORIES.has(category)) throw new HttpError(400, "Feedback category must be bug, idea, or general.", "invalid_feedback_category");
+  return category;
 }
 
 function checkOrigin(request, config) {
@@ -170,6 +177,18 @@ export function createDiyaServer({ config, database }) {
       if (request.method === "GET" && path === "/v1/usage") {
         const device = authenticate(request, database);
         return sendJson(response, 200, { usage: database.usageSummary(device.id) });
+      }
+      if (request.method === "POST" && path === "/v1/feedback") {
+        const device = authenticate(request, database);
+        limit(device.id);
+        const body = await readJson(request);
+        const message = stringValue(body.message, "feedback", 2_000);
+        const feedback = database.createFeedback({
+          deviceId: device.id,
+          category: feedbackCategory(body.category),
+          encryptedMessage: seal(message, config.encryptionKey)
+        });
+        return sendJson(response, 202, { accepted: true, feedback });
       }
       const oauthStartMatch = /^\/v1\/oauth\/(gmail|notion)\/start$/.exec(path);
       if (oauthStartMatch && request.method === "POST") {

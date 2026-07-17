@@ -21,7 +21,7 @@ Connector credentials are stored through Electron `safeStorage`, using the opera
 
 ## Diya Cloud: the startup path
 
-The `cloud` service is a separately deployable Node + SQLite API for the production product. Its root URL is also Diya's public launch page, with an encrypted, rate-limited early-access form and privacy summary. An operator can turn a requested email into one revocable desktop invite with a single Cloud command, then the user pairs Diya in the Connections gear using that code. Diya Cloud holds the OpenAI project key, encrypts Gmail/Notion tokens at rest, supports aggregate per-device usage, rate limits requests, and executes only desktop-approved actions. It never persists screen images, requests, responses, or action content. With a production HTTPS URL and provider credentials, the Gmail and Notion chips can open browser-based OAuth instead of asking the customer to paste tokens.
+The `cloud` service is a separately deployable Node + SQLite API for the production product. Its root URL is also Diya's public launch page, with an encrypted, rate-limited early-access form and privacy summary. An operator can turn a requested email into one revocable desktop invite with a single Cloud command, then the user pairs Diya in the Connections gear using that code. Enrolled beta users can send an explicit private feedback note from Settings; it is encrypted, never includes a screen capture, and is visible only to a Cloud operator. Diya Cloud holds the OpenAI project key, encrypts Gmail/Notion tokens at rest, supports aggregate per-device usage, rate limits requests, and executes only desktop-approved actions. It never persists screen images, requests, responses, or action content. With a production HTTPS URL and provider credentials, the Gmail and Notion chips can open browser-based OAuth instead of asking the customer to paste tokens.
 
 Disconnecting **Cloud** in Diya revokes that desktop's server-side device token before clearing it locally.
 
@@ -51,7 +51,7 @@ npm run check
 npm run dist
 ```
 
-The portable artifact is written to `dist\Diya 0.9.1.exe`.
+The portable artifact is written to `dist\Diya 0.10.0.exe`.
 
 ## Submission material
 

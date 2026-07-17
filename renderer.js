@@ -25,6 +25,14 @@ const notionParent = document.querySelector("#notion-parent");
 const saveConnector = document.querySelector("#save-connector");
 const disconnectConnector = document.querySelector("#disconnect-connector");
 const oauthConnector = document.querySelector("#oauth-connector");
+const feedback = document.querySelector("#feedback");
+const openFeedback = document.querySelector("#open-feedback");
+const feedbackForm = document.querySelector("#feedback-form");
+const feedbackSummary = document.querySelector("#feedback-summary");
+const feedbackCategory = document.querySelector("#feedback-category");
+const feedbackMessage = document.querySelector("#feedback-message");
+const submitFeedback = document.querySelector("#submit-feedback");
+const feedbackStatus = document.querySelector("#feedback-status");
 
 let mode = "coach";
 let steps = [];
@@ -47,6 +55,8 @@ approveAgent.onclick = runApprovedAgent;
 saveConnector.onclick = saveSelectedConnector;
 disconnectConnector.onclick = disconnectSelectedConnector;
 oauthConnector.onclick = startSelectedOAuth;
+openFeedback.onclick = toggleFeedback;
+submitFeedback.onclick = sendFeedback;
 connectorRow.onclick = (event) => {
   const button = event.target.closest("[data-connector]");
   if (button) openConnectorForm(button.dataset.connector, button.dataset.connected === "true");
@@ -58,6 +68,8 @@ window.diya.onOpened((payload) => {
   contextLabel.textContent = payload.live ? "screen context live" : "screen context ready";
   answer.hidden = true;
   connections.hidden = true;
+  feedback.hidden = true;
+  feedbackForm.hidden = true;
   currentAgent = undefined;
   enterPointerMode();
 });
@@ -83,6 +95,8 @@ function enterPointerMode() {
   prompt.value = "";
   connections.hidden = true;
   connectorForm.hidden = true;
+  feedback.hidden = true;
+  feedbackForm.hidden = true;
   selectedConnector = undefined;
   companion.className = "companion state-pointer";
   window.diya.resize(POINTER_SIZE);
@@ -118,15 +132,19 @@ function renderConnectors(connectors) {
   cloudConnected = Boolean(connectors.cloud);
   connectorRow.innerHTML = [["Cloud", "cloud", connectors.cloud], ["OpenAI", "openai", connectors.openai], ["Gmail", "gmail", connectors.gmail], ["Notion", "notion", connectors.notion]].map(([name, provider, connected]) => `<button class="connector ${connected ? "connected" : ""}" data-connector="${provider}" data-connected="${connected}"><i></i>${name}</button>`).join("");
   if (!connectors.secureStorage) hoverLine.textContent = "Secure system storage is unavailable, so connections cannot be saved.";
+  refreshFeedbackAvailability();
 }
 
 function toggleSettings() {
   if (connections.hidden) {
     connections.hidden = false;
     answer.hidden = true;
+    feedback.hidden = false;
+    feedbackForm.hidden = true;
+    feedbackStatus.textContent = "";
     window.diya.setPointerMode(false);
     window.diya.setFollow(false);
-    setState("settings", 265);
+    setState("settings", 320);
     loadConnectors();
   } else closeSettings();
 }
@@ -134,6 +152,8 @@ function toggleSettings() {
 function closeSettings() {
   connections.hidden = true;
   connectorForm.hidden = true;
+  feedback.hidden = true;
+  feedbackForm.hidden = true;
   selectedConnector = undefined;
   if (answer.hidden) enterPointerMode(); else setState("answer", 320);
 }
@@ -141,6 +161,8 @@ function closeSettings() {
 function openConnectorForm(provider, connected) {
   selectedConnector = provider;
   connectorForm.hidden = false;
+  feedback.hidden = true;
+  feedbackForm.hidden = true;
   connectorToken.value = "";
   cloudUrl.value = "";
   notionParent.value = "";
@@ -178,8 +200,11 @@ async function saveSelectedConnector() {
     renderConnectors(status);
     if (selectedConnector === "openai") liveVoice = true;
     connectorForm.hidden = true;
+    feedback.hidden = false;
+    feedbackForm.hidden = true;
+    refreshFeedbackAvailability();
     hoverLine.textContent = `${selectedConnector} connected.`;
-    setState("settings", 265);
+    setState("settings", 320);
   } catch (error) {
     hoverLine.textContent = error.message || "Connection could not be saved.";
   } finally {
@@ -193,10 +218,54 @@ async function disconnectSelectedConnector() {
     renderConnectors(await window.diya.disconnectConnector(selectedConnector));
     if (selectedConnector === "openai") liveVoice = false;
     connectorForm.hidden = true;
+    feedback.hidden = false;
+    feedbackForm.hidden = true;
+    refreshFeedbackAvailability();
     hoverLine.textContent = `${selectedConnector} disconnected.`;
-    setState("settings", 265);
+    setState("settings", 320);
   } catch (error) {
     hoverLine.textContent = error.message || "Connection could not be removed.";
+  }
+}
+
+function refreshFeedbackAvailability() {
+  if (feedback.hidden) return;
+  openFeedback.disabled = !cloudConnected;
+  openFeedback.textContent = cloudConnected ? "send feedback" : "pair Cloud first";
+  feedbackSummary.textContent = cloudConnected
+    ? "Send a private beta note. Diya never attaches your screen."
+    : "Pair Cloud to send a private beta note. Diya never attaches your screen.";
+  if (!cloudConnected) feedbackForm.hidden = true;
+}
+
+function toggleFeedback() {
+  if (!cloudConnected) return;
+  connectorForm.hidden = true;
+  feedbackForm.hidden = !feedbackForm.hidden;
+  feedbackStatus.textContent = "";
+  if (feedbackForm.hidden) {
+    setState("settings", 320);
+    return;
+  }
+  setState("settings", 430);
+  feedbackMessage.focus();
+}
+
+async function sendFeedback() {
+  const message = feedbackMessage.value.trim();
+  if (!message) { feedbackMessage.focus(); return; }
+  submitFeedback.disabled = true;
+  feedbackStatus.textContent = "Sending your private beta note...";
+  feedbackStatus.className = "feedback-status";
+  try {
+    await window.diya.sendFeedback({ category: feedbackCategory.value, message });
+    feedbackMessage.value = "";
+    feedbackStatus.textContent = "Thank you. Your note is with the Diya team.";
+  } catch (error) {
+    feedbackStatus.textContent = error.message || "Diya could not send that feedback.";
+    feedbackStatus.className = "feedback-status error";
+  } finally {
+    submitFeedback.disabled = false;
   }
 }
 

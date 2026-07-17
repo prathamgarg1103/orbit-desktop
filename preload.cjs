@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("diya", {
   connectors: () => ipcRenderer.invoke("companion:connectors"),
   saveConnector: (payload) => ipcRenderer.invoke("companion:saveConnector", payload),
   disconnectConnector: (provider) => ipcRenderer.invoke("companion:disconnectConnector", provider),
+  sendFeedback: (payload) => ipcRenderer.invoke("companion:sendFeedback", payload),
   approveAgent: (taskId) => ipcRenderer.invoke("companion:approveAgent", taskId),
   startOAuth: (provider) => ipcRenderer.invoke("companion:startOAuth", provider),
   transcribe: (payload) => ipcRenderer.invoke("companion:transcribe", payload),

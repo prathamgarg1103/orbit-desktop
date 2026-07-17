@@ -74,6 +74,14 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     assert.equal((await request(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ enrollmentCode: inviteCode }) })).status, 401);
     const token = paired.body.accessToken;
     const auth = { Authorization: `Bearer ${token}` };
+    const feedback = await request(cloudUrl, "/v1/feedback", { method: "POST", headers: auth, body: JSON.stringify({ category: "idea", message: "A keyboard shortcut reference would make the guide easier to learn." }) });
+    assert.equal(feedback.status, 202);
+    assert.equal(feedback.body.accepted, true);
+    const storedFeedback = database.listFeedbackEntries();
+    assert.equal(storedFeedback.length, 1);
+    assert.equal(storedFeedback[0].encryptedMessage.includes("keyboard shortcut"), false);
+    assert.equal(unseal(storedFeedback[0].encryptedMessage, config.encryptionKey), "A keyboard shortcut reference would make the guide easier to learn.");
+    assert.equal((await request(cloudUrl, "/v1/feedback", { method: "POST", headers: auth, body: JSON.stringify({ category: "wrong", message: "nope" }) })).status, 400);
     const connected = await request(cloudUrl, "/v1/connectors/notion", { method: "PUT", headers: auth, body: JSON.stringify({ accessToken: "secret-notion-token", metadata: { parentPageId: "page-123" } }) });
     assert.equal(connected.body.connectors.notion, true);
     const stored = database.getConnection(paired.body.device.id, "notion");

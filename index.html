@@ -72,6 +72,16 @@
           <label id="notion-parent-row" hidden>Notion parent page ID<input id="notion-parent" type="text" autocomplete="off"></label>
           <div><button id="oauth-connector" class="soft" hidden>connect in browser</button><button id="save-connector" class="approve">save</button><button id="disconnect-connector" class="quiet" hidden>disconnect</button></div>
         </div>
+        <section id="feedback" class="feedback" hidden aria-labelledby="feedback-title">
+          <div class="feedback-head"><strong id="feedback-title">help shape Diya</strong><button id="open-feedback" class="soft">send feedback</button></div>
+          <p id="feedback-summary">Pair Cloud to send a private beta note. Diya never attaches your screen.</p>
+          <div id="feedback-form" hidden>
+            <label>Type<select id="feedback-category"><option value="general">general</option><option value="bug">something broke</option><option value="idea">an idea</option></select></label>
+            <label>Your note<textarea id="feedback-message" maxlength="2000" placeholder="What happened, or what should Diya do next?"></textarea></label>
+            <div><button id="submit-feedback" class="approve">send privately</button></div>
+            <p id="feedback-status" class="feedback-status" aria-live="polite"></p>
+          </div>
+        </section>
       </section>
     </section>
   </main>

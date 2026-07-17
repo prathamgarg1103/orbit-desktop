@@ -2,7 +2,7 @@
 
 Diya Cloud is the server-side half of the Diya startup foundation. It keeps the OpenAI project key and any future provider tokens out of the desktop process, pairs individual desktop installations with revocable opaque tokens, and persists only encrypted connector tokens plus minimal usage counters.
 
-It intentionally does not store screen images, questions, model answers, raw provider tokens, or Gmail/Notion content. A screen image is accepted for a single `/v1/screen-guides` request, forwarded to the Responses API with `store: false`, and discarded from process memory after the request completes. A visitor who deliberately requests early access has their email encrypted at rest; it is used only for beta follow-up.
+It intentionally does not store screen images, questions, model answers, raw provider tokens, or Gmail/Notion content. A screen image is accepted for a single `/v1/screen-guides` request, forwarded to the Responses API with `store: false`, and discarded from process memory after the request completes. A visitor who deliberately requests early access has their email encrypted at rest; it is used only for beta follow-up. An enrolled user can deliberately submit a short feedback note; it is also encrypted at rest and never includes a screen image.
 
 ## Run locally
 
@@ -44,6 +44,15 @@ npm run admin -- waitlist invite --id <entry-id> --label "first beta user" --exp
 
 The command returns the decrypted email and raw code only once for the operator to send privately. A second invite for the same request is rejected. Mark an unqualified request as declined, or restore it to requested, with `waitlist set-status --id <entry-id> --status declined|requested`.
 
+## Beta feedback
+
+After pairing Diya Cloud, a beta user can open **Settings** and deliberately send a short bug report, product idea, or general note. This request authenticates with the desktop's revocable device token, contains no screenshot or prompt content, and is encrypted at rest before it is stored. Review it only from the Cloud host:
+
+```bash
+npm run admin -- feedback list --status new
+npm run admin -- feedback set-status --id <feedback-id> --status reviewed
+```
+
 ## APIs
 
 - `GET /` and `GET /privacy` - public Diya launch and privacy pages.
@@ -52,6 +61,7 @@ The command returns the decrypted email and raw code only once for the operator 
 - `GET /health` — readiness without secrets.
 - `POST /v1/device-sessions` — enroll a desktop with a one-time invite or operator bootstrap code.
 - `GET /v1/me` and `GET /v1/usage` — device status and aggregate counters.
+- `POST /v1/feedback` — an explicit, encrypted beta note from a paired desktop; no screen content is attached.
 - `DELETE /v1/me/device` — revokes the current desktop token; Diya calls this when Cloud is disconnected.
 - `POST /v1/screen-guides` — one hotkey-authorized image, structured visual guidance, no screen persistence.
 - `PUT` / `DELETE /v1/connectors/gmail|notion` — encrypted server-side connector credentials.

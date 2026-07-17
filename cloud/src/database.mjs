@@ -68,10 +68,20 @@ export class DiyaDatabase {
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS feedback_entries (
+        id TEXT PRIMARY KEY,
+        device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+        category TEXT NOT NULL,
+        encrypted_message TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'new',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
       CREATE INDEX IF NOT EXISTS usage_events_by_device_created ON usage_events(device_id, created_at DESC);
       CREATE INDEX IF NOT EXISTS oauth_states_by_expiry ON oauth_states(expires_at);
       CREATE INDEX IF NOT EXISTS invites_by_created ON invites(created_at DESC);
       CREATE INDEX IF NOT EXISTS waitlist_entries_by_status_created ON waitlist_entries(status, created_at DESC);
+      CREATE INDEX IF NOT EXISTS feedback_entries_by_status_created ON feedback_entries(status, created_at DESC);
     `);
   }
 
@@ -243,6 +253,31 @@ export class DiyaDatabase {
       return this.db.prepare("UPDATE waitlist_entries SET status = ?, updated_at = ? WHERE id = ? AND status = 'declined'").run(nextStatus, now(), String(id)).changes > 0;
     }
     throw new Error("Waitlist status must be requested or declined.");
+  }
+
+  createFeedback({ deviceId, category, encryptedMessage }) {
+    const timestamp = now();
+    const feedback = {
+      id: newId(),
+      deviceId: String(deviceId),
+      category: String(category || "general").slice(0, 30),
+      encryptedMessage: String(encryptedMessage),
+      createdAt: timestamp
+    };
+    this.db.prepare("INSERT INTO feedback_entries (id, device_id, category, encrypted_message, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'new', ?, ?)")
+      .run(feedback.id, feedback.deviceId, feedback.category, feedback.encryptedMessage, feedback.createdAt, feedback.createdAt);
+    return { id: feedback.id, category: feedback.category, status: "new", createdAt: feedback.createdAt, updatedAt: feedback.createdAt };
+  }
+
+  listFeedbackEntries(status = "") {
+    const filter = String(status || "").trim();
+    return filter
+      ? this.db.prepare("SELECT id, device_id AS deviceId, category, encrypted_message AS encryptedMessage, status, created_at AS createdAt, updated_at AS updatedAt FROM feedback_entries WHERE status = ? ORDER BY created_at DESC").all(filter)
+      : this.db.prepare("SELECT id, device_id AS deviceId, category, encrypted_message AS encryptedMessage, status, created_at AS createdAt, updated_at AS updatedAt FROM feedback_entries ORDER BY created_at DESC").all();
+  }
+
+  updateFeedbackStatus(id, status) {
+    return this.db.prepare("UPDATE feedback_entries SET status = ?, updated_at = ? WHERE id = ?").run(String(status), now(), String(id)).changes > 0;
   }
 
   connectorStatus(deviceId) {
