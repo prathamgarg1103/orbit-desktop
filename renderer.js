@@ -33,7 +33,7 @@ let selectedConnector;
 let liveVoice = false;
 let activeRecorder;
 let cloudConnected = false;
-const POINTER_SIZE = { width: 54, height: 54 };
+const POINTER_SIZE = { width: 38, height: 44 };
 
 document.querySelector("#close").onclick = () => window.diya.close();
 document.querySelector("#settings").onclick = toggleSettings;

@@ -51,7 +51,7 @@ npm run check
 npm run dist
 ```
 
-The portable artifact is written to `dist\Diya 0.9.0.exe`.
+The portable artifact is written to `dist\Diya 0.9.1.exe`.
 
 ## Submission material
 

@@ -9,8 +9,8 @@ const execFileAsync = promisify(execFile);
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5.6";
 const RESPONSES_URL = (process.env.DIYA_RESPONSES_URL || process.env.ORBIT_RESPONSES_URL || "https://api.openai.com/v1/responses").replace(/\/+$/, "");
 const TRANSCRIPTIONS_URL = (process.env.DIYA_TRANSCRIPTIONS_URL || process.env.ORBIT_TRANSCRIPTIONS_URL || "https://api.openai.com/v1/audio/transcriptions").replace(/\/+$/, "");
-const CURSOR_GAP = 14;
-const POINTER_COMPANION_SIZE = { width: 54, height: 54 };
+const CURSOR_GAP = 9;
+const POINTER_COMPANION_SIZE = { width: 38, height: 44 };
 const MIN_COMPANION_SIZE = { ...POINTER_COMPANION_SIZE };
 const MAX_COMPANION_SIZE = { width: 420, height: 520 };
 
