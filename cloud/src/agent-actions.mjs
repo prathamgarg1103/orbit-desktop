@@ -19,8 +19,8 @@ function gmailRaw(action) {
 async function createNotionPage(action, accessToken, metadata) {
   const parentPageId = sanitizeText(metadata?.parentPageId, 128);
   if (!parentPageId) throw new HttpError(409, "The connected Notion workspace needs a parent page ID.", "notion_parent_required");
-  const title = sanitizeText(action.title, 120) || "Orbit agent note";
-  const content = sanitizeText(action.content, 6_000) || "Orbit agent brief";
+  const title = sanitizeText(action.title, 120) || "Diya agent note";
+  const content = sanitizeText(action.content, 6_000) || "Diya agent brief";
   const response = await fetch("https://api.notion.com/v1/pages", {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Notion-Version": "2026-03-11", "Content-Type": "application/json" },
@@ -47,11 +47,11 @@ async function createGmailDraft(action, accessToken) {
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new HttpError(502, body.error?.message || `Gmail returned ${response.status}.`, "gmail_error");
-  return { message: `Draft created for ${recipient}. Orbit did not send it.`, url: "" };
+  return { message: `Draft created for ${recipient}. Diya did not send it.`, url: "" };
 }
 
 export async function executeApprovedAction({ action, connection }) {
   if (action?.kind === "notion_create_page") return createNotionPage(action, connection.accessToken, connection.metadata);
   if (action?.kind === "gmail_draft") return createGmailDraft(action, connection.accessToken);
-  throw new HttpError(400, "Orbit does not support that approved action.", "unsupported_action");
+  throw new HttpError(400, "Diya does not support that approved action.", "unsupported_action");
 }

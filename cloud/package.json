@@ -1,9 +1,9 @@
 {
-  "name": "orbit-cloud",
+  "name": "diya-cloud",
   "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Secure API service for Orbit desktop sessions and approval-first agent actions.",
+  "description": "Secure API service for Diya desktop sessions and approval-first agent actions.",
   "engines": {
     "node": ">=22.13.0"
   },

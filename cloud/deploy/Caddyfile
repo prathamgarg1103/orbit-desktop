@@ -1,4 +1,4 @@
-{$ORBIT_DOMAIN} {
+{$DIYA_DOMAIN} {
   encode zstd gzip
   reverse_proxy cloud:8787
 }

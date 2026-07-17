@@ -24,14 +24,14 @@ export function safeEqual(left, right) {
 
 export function signState(payload, key) {
   const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-  const signature = createHmac("sha256", key).update("orbit-oauth-state-v1").update(encoded).digest("base64url");
+  const signature = createHmac("sha256", key).update("diya-oauth-state-v1").update(encoded).digest("base64url");
   return `${encoded}.${signature}`;
 }
 
 export function verifyState(value, key) {
   const [encoded, signature] = String(value || "").split(".");
   if (!encoded || !signature) throw new Error("Invalid OAuth state.");
-  const expected = createHmac("sha256", key).update("orbit-oauth-state-v1").update(encoded).digest("base64url");
+  const expected = createHmac("sha256", key).update("diya-oauth-state-v1").update(encoded).digest("base64url");
   if (!safeEqual(signature, expected)) throw new Error("Invalid OAuth state.");
   let payload;
   try { payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")); } catch { throw new Error("Invalid OAuth state."); }

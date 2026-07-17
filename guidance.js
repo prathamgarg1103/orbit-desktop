@@ -6,7 +6,7 @@ const title = document.querySelector("#step-title");
 const detail = document.querySelector("#step-detail");
 const shortcut = document.querySelector("#shortcut");
 
-window.orbit.onGuidance((payload) => {
+window.diya.onGuidance((payload) => {
   const point = payload?.point || { x: innerWidth / 2, y: innerHeight / 2 };
   const x = Math.max(28, Math.min(point.x, innerWidth - 28));
   const y = Math.max(28, Math.min(point.y, innerHeight - 28));
@@ -17,7 +17,7 @@ window.orbit.onGuidance((payload) => {
   const placeLeft = x > innerWidth * .62;
   callout.style.left = `${Math.max(20, Math.min(placeLeft ? x - 330 : x + 48, innerWidth - 310))}px`;
   callout.style.top = `${Math.max(20, Math.min(y - 36, innerHeight - 190))}px`;
-  counter.textContent = `ORBIT GUIDE ${Number(payload.index || 0) + 1} OF ${payload.total || 1}`;
+  counter.textContent = `DIYA GUIDE ${Number(payload.index || 0) + 1} OF ${payload.total || 1}`;
   title.textContent = payload.step?.title || "Start here";
   detail.textContent = payload.step?.detail || "";
   shortcut.textContent = payload.shortcut || "Esc when you are ready";

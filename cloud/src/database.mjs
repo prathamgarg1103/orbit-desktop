@@ -5,7 +5,7 @@ import { newId, now } from "./security.mjs";
 
 const PROVIDERS = new Set(["gmail", "notion"]);
 
-export class OrbitDatabase {
+export class DiyaDatabase {
   constructor(databasePath) {
     if (databasePath !== ":memory:") fs.mkdirSync(path.dirname(databasePath), { recursive: true });
     this.db = new DatabaseSync(databasePath);
@@ -55,7 +55,7 @@ export class OrbitDatabase {
   }
 
   createDevice({ name, tokenHash }) {
-    const device = { id: newId(), name: String(name).slice(0, 100) || "Orbit desktop", tokenHash, createdAt: now() };
+    const device = { id: newId(), name: String(name).slice(0, 100) || "Diya desktop", tokenHash, createdAt: now() };
     this.db.prepare("INSERT INTO devices (id, name, token_hash, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)")
       .run(device.id, device.name, device.tokenHash, device.createdAt, device.createdAt);
     return { id: device.id, name: device.name, createdAt: device.createdAt };

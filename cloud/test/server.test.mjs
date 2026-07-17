@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import http from "node:http";
 import test from "node:test";
-import { OrbitDatabase } from "../src/database.mjs";
-import { createOrbitServer } from "../src/server.mjs";
+import { DiyaDatabase } from "../src/database.mjs";
+import { createDiyaServer } from "../src/server.mjs";
 
 function listen(server) {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(`http://127.0.0.1:${server.address().port}`)));
@@ -28,7 +28,7 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     res.end(JSON.stringify({ output_text: JSON.stringify({ response: "Use the highlighted button.", steps: [{ title: "Open settings", detail: "Start here.", x: 220, y: 540 }] }) }));
   });
   const openaiUrl = await listen(openai);
-  const database = new OrbitDatabase(":memory:");
+  const database = new DiyaDatabase(":memory:");
   const config = {
     bootstrapCode: "test-pairing-code-with-enough-length",
     encryptionKey: randomBytes(32),
@@ -39,7 +39,7 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     requestWindowMs: 600_000,
     allowedOrigins: new Set()
   };
-  const cloud = createOrbitServer({ config, database });
+  const cloud = createDiyaServer({ config, database });
   const cloudUrl = await listen(cloud);
   try {
     assert.equal((await request(cloudUrl, "/health")).body.ok, true);

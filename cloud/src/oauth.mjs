@@ -6,7 +6,7 @@ const GMAIL_COMPOSE_SCOPE = "https://www.googleapis.com/auth/gmail.compose";
 
 function providerConfig(config, provider) {
   const settings = provider === "gmail" ? config.google : provider === "notion" ? config.notion : null;
-  if (!settings) throw new HttpError(503, `${provider === "gmail" ? "Google Gmail" : "Notion"} OAuth is not configured on Orbit Cloud yet.`, "oauth_not_configured");
+  if (!settings) throw new HttpError(503, `${provider === "gmail" ? "Google Gmail" : "Notion"} OAuth is not configured on Diya Cloud yet.`, "oauth_not_configured");
   return settings;
 }
 
@@ -118,12 +118,12 @@ export async function completeOAuth({ provider, state, code, config, database })
     refreshToken: refreshToken ? seal(refreshToken, config.encryptionKey) : "",
     metadata
   });
-  return { html: redirectPage(`${provider === "gmail" ? "Gmail" : "Notion"} connected`, "You can close this tab and return to Orbit. Actions will still require your approval in the desktop app.") };
+  return { html: redirectPage(`${provider === "gmail" ? "Gmail" : "Notion"} connected`, "You can close this tab and return to Diya. Actions will still require your approval in the desktop app.") };
 }
 
 export async function activeConnection({ provider, deviceId, config, database }) {
   const stored = database.getConnection(deviceId, provider);
-  if (!stored) throw new HttpError(409, `Connect ${provider === "gmail" ? "Gmail" : "Notion"} in Orbit Cloud before approving this action.`, "connector_required");
+  if (!stored) throw new HttpError(409, `Connect ${provider === "gmail" ? "Gmail" : "Notion"} in Diya Cloud before approving this action.`, "connector_required");
   const metadata = readMetadata(stored);
   let accessToken = unseal(stored.accessToken, config.encryptionKey);
   const refreshToken = stored.refreshToken ? unseal(stored.refreshToken, config.encryptionKey) : "";
@@ -142,5 +142,5 @@ export async function activeConnection({ provider, deviceId, config, database })
 }
 
 export function oauthErrorPage(message) {
-  return redirectPage("Connection was not completed", String(message || "Please return to Orbit and try again."), true);
+  return redirectPage("Connection was not completed", String(message || "Please return to Diya and try again."), true);
 }

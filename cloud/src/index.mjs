@@ -1,13 +1,13 @@
 import { loadConfig } from "./config.mjs";
-import { OrbitDatabase } from "./database.mjs";
-import { createOrbitServer } from "./server.mjs";
+import { DiyaDatabase } from "./database.mjs";
+import { createDiyaServer } from "./server.mjs";
 
 const config = loadConfig();
-const database = new OrbitDatabase(config.databasePath);
-const server = createOrbitServer({ config, database });
+const database = new DiyaDatabase(config.databasePath);
+const server = createDiyaServer({ config, database });
 
 server.listen(config.port, config.host, () => {
-  console.log(`Orbit Cloud listening on http://${config.host}:${config.port}`);
+  console.log(`Diya Cloud listening on http://${config.host}:${config.port}`);
 });
 
 function shutdown() {

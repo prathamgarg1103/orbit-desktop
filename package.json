@@ -1,8 +1,8 @@
 {
-  "name": "orbit-desktop",
-  "version": "0.7.0",
+  "name": "diya-desktop",
+  "version": "0.8.0",
   "private": true,
-  "description": "A hotkey-activated, screen-aware desktop AI buddy that teaches and launches approval-first agents.",
+  "description": "Diya is a hotkey-activated, screen-aware desktop AI buddy that teaches and launches approval-first agents.",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
@@ -15,9 +15,9 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "com.orbit.desktopcompanion",
-    "productName": "Orbit",
-    "icon": "build/orbit.ico",
+    "appId": "com.diya.desktopcompanion",
+    "productName": "Diya",
+    "icon": "build/diya.ico",
     "asar": true,
     "asarUnpack": [
       "uia-worker.ps1"

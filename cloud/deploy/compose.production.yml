@@ -6,13 +6,13 @@ services:
     env_file:
       - ../.env
     environment:
-      ORBIT_HOST: 0.0.0.0
-      ORBIT_PORT: 8787
-      ORBIT_DATABASE_PATH: /data/orbit-cloud.sqlite
+      DIYA_HOST: 0.0.0.0
+      DIYA_PORT: 8787
+      DIYA_DATABASE_PATH: /data/diya-cloud.sqlite
     volumes:
-      - orbit-cloud-data:/data
+      - diya-cloud-data:/data
     restart: unless-stopped
-    networks: [orbit]
+    networks: [diya]
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
@@ -22,7 +22,7 @@ services:
   caddy:
     image: caddy:2.8-alpine
     environment:
-      ORBIT_DOMAIN: ${ORBIT_DOMAIN}
+      DIYA_DOMAIN: ${DIYA_DOMAIN}
     ports:
       - "80:80"
       - "443:443"
@@ -35,12 +35,12 @@ services:
     depends_on:
       cloud:
         condition: service_healthy
-    networks: [orbit]
+    networks: [diya]
 
 volumes:
-  orbit-cloud-data:
+  diya-cloud-data:
   caddy-data:
   caddy-config:
 
 networks:
-  orbit:
+  diya:

@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("orbit", {
+contextBridge.exposeInMainWorld("diya", {
   close: () => ipcRenderer.invoke("companion:close"),
   resize: (size) => ipcRenderer.send("companion:resize", size),
   setFollow: (shouldFollow) => ipcRenderer.send("companion:follow", shouldFollow),

@@ -9,5 +9,5 @@ export class HttpError extends Error {
 
 export function asHttpError(error) {
   if (error instanceof HttpError) return error;
-  return new HttpError(500, "Orbit Cloud could not complete that request.", "internal_error");
+  return new HttpError(500, "Diya Cloud could not complete that request.", "internal_error");
 }

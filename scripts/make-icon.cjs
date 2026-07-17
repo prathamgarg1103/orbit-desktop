@@ -88,7 +88,7 @@ entry.writeUInt16LE(32, 6);
 entry.writeUInt32LE(png.length, 8);
 entry.writeUInt32LE(22, 12);
 
-const output = path.join(__dirname, "..", "build", "orbit.ico");
+const output = path.join(__dirname, "..", "build", "diya.ico");
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, Buffer.concat([iconHeader, entry, png]));
 console.log(`Wrote ${output}`);

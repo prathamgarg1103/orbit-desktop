@@ -8,7 +8,7 @@ const server = http.createServer(async (request, response) => {
   response.writeHead(200, { "Content-Type": "application/json" });
   response.end(JSON.stringify({
     output_text: JSON.stringify({
-      response: "Orbit Cloud received your hotkey screen and found the first safe control.",
+      response: "Diya Cloud received your hotkey screen and found the first safe control.",
       steps: [
         { title: "Start here", detail: "This is the first visible control to use.", x: 260, y: 460 },
         { title: "Confirm the next change", detail: "Keep the action small and reversible.", x: 520, y: 600 }

@@ -1,9 +1,9 @@
 FROM node:24-bookworm-slim
 
 ENV NODE_ENV=production \
-    ORBIT_HOST=0.0.0.0 \
-    ORBIT_PORT=8787 \
-    ORBIT_DATABASE_PATH=/data/orbit-cloud.sqlite
+    DIYA_HOST=0.0.0.0 \
+    DIYA_PORT=8787 \
+    DIYA_DATABASE_PATH=/data/diya-cloud.sqlite
 
 WORKDIR /app
 COPY --chown=node:node package.json ./

@@ -35,7 +35,7 @@ let activeRecorder;
 let cloudConnected = false;
 const POINTER_SIZE = { width: 54, height: 54 };
 
-document.querySelector("#close").onclick = () => window.orbit.close();
+document.querySelector("#close").onclick = () => window.diya.close();
 document.querySelector("#settings").onclick = toggleSettings;
 document.querySelector("#close-settings").onclick = closeSettings;
 document.querySelectorAll(".mode").forEach((button) => { button.onclick = () => setMode(button.dataset.mode); });
@@ -53,7 +53,7 @@ connectorRow.onclick = (event) => {
 };
 prompt.addEventListener("keydown", (event) => { if (event.key === "Enter") submit(); });
 
-window.orbit.onOpened((payload) => {
+window.diya.onOpened((payload) => {
   liveVoice = Boolean(payload.liveVoice);
   contextLabel.textContent = payload.live ? "screen context live" : "screen context ready";
   answer.hidden = true;
@@ -61,22 +61,22 @@ window.orbit.onOpened((payload) => {
   currentAgent = undefined;
   enterPointerMode();
 });
-window.orbit.onPrompt(() => enterPromptMode());
-window.orbit.onError((message) => {
+window.diya.onPrompt(() => enterPromptMode());
+window.diya.onError((message) => {
   answer.hidden = true;
   connections.hidden = true;
   enterPromptMode(message);
 });
-window.orbit.onHover((item) => {
+window.diya.onHover((item) => {
   if (companion.classList.contains("state-pointer") || companion.classList.contains("state-thinking") || !answer.hidden || !connections.hidden) return;
   const name = String(item?.name || "").trim();
   const type = String(item?.controlType || "").replace(/^ControlType\./, "").replace(/Control$/, "").toLowerCase();
-  hoverLine.textContent = name || type ? `Pointing at ${name || type}${name && type ? ` (${type})` : ""}. Ask Orbit what it does.` : "Point at anything and ask Orbit what to do next.";
+  hoverLine.textContent = name || type ? `Pointing at ${name || type}${name && type ? ` (${type})` : ""}. Ask Diya what it does.` : "Point at anything and ask Diya what to do next.";
 });
 
 function setState(state, height, width = 360) {
   companion.className = `companion state-${state}`;
-  window.orbit.resize({ width, height });
+  window.diya.resize({ width, height });
 }
 
 function enterPointerMode() {
@@ -85,9 +85,9 @@ function enterPointerMode() {
   connectorForm.hidden = true;
   selectedConnector = undefined;
   companion.className = "companion state-pointer";
-  window.orbit.resize(POINTER_SIZE);
-  window.orbit.setPointerMode(true);
-  window.orbit.setFollow(true);
+  window.diya.resize(POINTER_SIZE);
+  window.diya.setPointerMode(true);
+  window.diya.setFollow(true);
 }
 
 function enterPromptMode(message) {
@@ -95,10 +95,10 @@ function enterPromptMode(message) {
   connections.hidden = true;
   connectorForm.hidden = true;
   selectedConnector = undefined;
-  hoverLine.textContent = message || "Ask about what you are pointing at, or tell Orbit what to do.";
-  hint.innerHTML = "<kbd>Esc</kbd> hide &middot; Orbit only sees a screen after the hotkey";
-  window.orbit.setPointerMode(false);
-  window.orbit.setFollow(false);
+  hoverLine.textContent = message || "Ask about what you are pointing at, or tell Diya what to do.";
+  hint.innerHTML = "<kbd>Esc</kbd> hide &middot; Diya only sees a screen after the hotkey";
+  window.diya.setPointerMode(false);
+  window.diya.setFollow(false);
   setState("prompt", 164);
   loadConnectors();
   prompt.focus();
@@ -107,11 +107,11 @@ function enterPromptMode(message) {
 function setMode(nextMode) {
   mode = nextMode;
   document.querySelectorAll(".mode").forEach((button) => button.classList.toggle("active", button.dataset.mode === mode));
-  prompt.placeholder = mode === "agent" ? "tell Orbit what to do" : "ask about what is here";
+  prompt.placeholder = mode === "agent" ? "tell Diya what to do" : "ask about what is here";
 }
 
 async function loadConnectors() {
-  try { renderConnectors(await window.orbit.connectors()); } catch { connectorRow.textContent = "connections unavailable"; }
+  try { renderConnectors(await window.diya.connectors()); } catch { connectorRow.textContent = "connections unavailable"; }
 }
 
 function renderConnectors(connectors) {
@@ -124,8 +124,8 @@ function toggleSettings() {
   if (connections.hidden) {
     connections.hidden = false;
     answer.hidden = true;
-    window.orbit.setPointerMode(false);
-    window.orbit.setFollow(false);
+    window.diya.setPointerMode(false);
+    window.diya.setFollow(false);
     setState("settings", 265);
     loadConnectors();
   } else closeSettings();
@@ -144,7 +144,7 @@ function openConnectorForm(provider, connected) {
   connectorToken.value = "";
   cloudUrl.value = "";
   notionParent.value = "";
-  const name = provider === "cloud" ? "Orbit Cloud" : provider === "openai" ? "OpenAI" : provider === "notion" ? "Notion" : "Gmail";
+  const name = provider === "cloud" ? "Diya Cloud" : provider === "openai" ? "OpenAI" : provider === "notion" ? "Notion" : "Gmail";
   connectorTitle.firstChild.textContent = `${connected ? "Manage" : "Connect"} ${name}`;
   connectorToken.placeholder = provider === "cloud" ? "pairing code" : provider === "openai" ? "sk-..." : "access token";
   if (provider === "notion" && cloudConnected && connected) connectorToken.placeholder = "leave blank to keep Cloud OAuth token";
@@ -161,10 +161,10 @@ async function startSelectedOAuth() {
   if (!["gmail", "notion"].includes(selectedConnector)) return;
   oauthConnector.disabled = true;
   try {
-    await window.orbit.startOAuth(selectedConnector);
+    await window.diya.startOAuth(selectedConnector);
     hoverLine.textContent = "Browser opened. Approve access there, then reopen this connector to finish its settings.";
   } catch (error) {
-    hoverLine.textContent = error.message || "Orbit could not start the browser connection.";
+    hoverLine.textContent = error.message || "Diya could not start the browser connection.";
   } finally {
     oauthConnector.disabled = false;
   }
@@ -174,7 +174,7 @@ async function saveSelectedConnector() {
   if (!selectedConnector) return;
   saveConnector.disabled = true;
   try {
-    const status = await window.orbit.saveConnector({ provider: selectedConnector, token: connectorToken.value, parentPageId: notionParent.value, cloudUrl: cloudUrl.value });
+    const status = await window.diya.saveConnector({ provider: selectedConnector, token: connectorToken.value, parentPageId: notionParent.value, cloudUrl: cloudUrl.value });
     renderConnectors(status);
     if (selectedConnector === "openai") liveVoice = true;
     connectorForm.hidden = true;
@@ -190,7 +190,7 @@ async function saveSelectedConnector() {
 async function disconnectSelectedConnector() {
   if (!selectedConnector) return;
   try {
-    renderConnectors(await window.orbit.disconnectConnector(selectedConnector));
+    renderConnectors(await window.diya.disconnectConnector(selectedConnector));
     if (selectedConnector === "openai") liveVoice = false;
     connectorForm.hidden = true;
     hoverLine.textContent = `${selectedConnector} disconnected.`;
@@ -207,16 +207,16 @@ async function submit() {
   voice.disabled = true;
   answer.hidden = true;
   connections.hidden = true;
-  window.orbit.setPointerMode(false);
+  window.diya.setPointerMode(false);
   hoverLine.textContent = mode === "agent" ? "On it. Building a safe plan..." : "On it. Looking at this screen...";
   setState("thinking", 164);
   try {
-    const result = await window.orbit.ask({ request, mode });
+    const result = await window.diya.ask({ request, mode });
     steps = result.steps || [];
     currentAgent = result.agent || undefined;
     presentAnswer(result);
   } catch (error) {
-    hoverLine.textContent = error.message || "Orbit could not answer that.";
+    hoverLine.textContent = error.message || "Diya could not answer that.";
     setState("prompt", 164);
   } finally {
     ask.disabled = false;
@@ -226,7 +226,7 @@ async function submit() {
 
 function presentAnswer(result) {
   answer.hidden = false;
-  answerMode.textContent = result.mode === "agent" ? "agent plan" : result.demo ? "orbit demo" : "orbit";
+  answerMode.textContent = result.mode === "agent" ? "agent plan" : result.demo ? "diya demo" : "diya";
   answerText.textContent = result.text;
   agentAction.hidden = !currentAgent;
   if (currentAgent) {
@@ -234,16 +234,16 @@ function presentAnswer(result) {
     approveAgent.textContent = currentAgent.approvalLabel;
     approveAgent.hidden = false;
   }
-  hoverLine.textContent = result.mode === "agent" ? "Plan ready. Orbit has not changed anything." : "Answer ready. Ask Orbit to guide you through it.";
-  window.orbit.setFollow(false);
-  window.orbit.setPointerMode(false);
+  hoverLine.textContent = result.mode === "agent" ? "Plan ready. Diya has not changed anything." : "Answer ready. Ask Diya to guide you through it.";
+  window.diya.setFollow(false);
+  window.diya.setPointerMode(false);
   setState("answer", currentAgent ? 390 : 320);
   if (result.mode === "coach") speak(result.text);
 }
 
 async function showGuide() {
   if (!steps.length) return;
-  const shown = await window.orbit.draw({ steps });
+  const shown = await window.diya.draw({ steps });
   if (shown) hint.textContent = "Ctrl + Shift + G moves through the guide";
 }
 
@@ -258,7 +258,7 @@ async function runApprovedAgent() {
   approveAgent.disabled = true;
   approveAgent.textContent = "running";
   try {
-    const result = await window.orbit.approveAgent(currentAgent.id);
+    const result = await window.diya.approveAgent(currentAgent.id);
     agentActionDetail.textContent = result.message;
     approveAgent.hidden = true;
     if (result.url && /^https:\/\//.test(result.url)) {
@@ -270,7 +270,7 @@ async function runApprovedAgent() {
       agentActionDetail.append(link);
     }
   } catch (error) {
-    agentActionDetail.textContent = error.message || "Orbit could not run that action.";
+    agentActionDetail.textContent = error.message || "Diya could not run that action.";
     approveAgent.disabled = false;
     approveAgent.textContent = currentAgent.approvalLabel;
   }
@@ -293,7 +293,7 @@ async function startVoice() {
       voice.textContent = "...";
       try {
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
-        handleSpoken(await window.orbit.transcribe({ base64: await blobToBase64(blob), mimeType: blob.type }));
+        handleSpoken(await window.diya.transcribe({ base64: await blobToBase64(blob), mimeType: blob.type }));
       } catch (error) {
         hoverLine.textContent = error.message || "I couldn't transcribe that.";
       } finally {
@@ -323,9 +323,9 @@ function startBrowserSpeechRecognition() {
 }
 
 function handleSpoken(spoken) {
-  if (/^(orbit|hey\s*orbit|hey\s*clicky)\s+agent/i.test(spoken)) {
+  if (/^(diya|hey\s*diya|orbit|hey\s*orbit|hey\s*clicky)\s+agent/i.test(spoken)) {
     setMode("agent");
-    prompt.value = spoken.replace(/^(orbit|hey\s*orbit|hey\s*clicky)\s+agent[:,]?\s*/i, "");
+    prompt.value = spoken.replace(/^(diya|hey\s*diya|orbit|hey\s*orbit|hey\s*clicky)\s+agent[:,]?\s*/i, "");
   } else prompt.value = spoken;
   submit();
 }

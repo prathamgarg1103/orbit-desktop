@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import http from "node:http";
 import test from "node:test";
-import { OrbitDatabase } from "../src/database.mjs";
+import { DiyaDatabase } from "../src/database.mjs";
 import { activeConnection } from "../src/oauth.mjs";
-import { createOrbitServer } from "../src/server.mjs";
+import { createDiyaServer } from "../src/server.mjs";
 
 function listen(server) {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(`http://127.0.0.1:${server.address().port}`)));
@@ -31,7 +31,7 @@ test("runs one-time Gmail and Notion OAuth callbacks without storing provider to
     return response.end(JSON.stringify({ access_token: "google-refreshed", expires_in: 3600 }));
   });
   const providerUrl = await listen(provider);
-  const database = new OrbitDatabase(":memory:");
+  const database = new DiyaDatabase(":memory:");
   const config = {
     bootstrapCode: "test-pairing-code-with-enough-length",
     encryptionKey: randomBytes(32),
@@ -46,7 +46,7 @@ test("runs one-time Gmail and Notion OAuth callbacks without storing provider to
     google: { clientId: "google-client", clientSecret: "google-secret", authorizeUrl: `${providerUrl}/google/authorize`, tokenUrl: `${providerUrl}/google/token`, redirectUri: "http://127.0.0.1:8787/oauth/gmail/callback" },
     notion: { clientId: "notion-client", clientSecret: "notion-secret", authorizeUrl: `${providerUrl}/notion/authorize`, tokenUrl: `${providerUrl}/notion/token`, redirectUri: "http://127.0.0.1:8787/oauth/notion/callback" }
   };
-  const cloud = createOrbitServer({ config, database });
+  const cloud = createDiyaServer({ config, database });
   const cloudUrl = await listen(cloud);
   try {
     const paired = await json(cloudUrl, "/v1/device-sessions", { method: "POST", body: JSON.stringify({ bootstrapCode: config.bootstrapCode }) });

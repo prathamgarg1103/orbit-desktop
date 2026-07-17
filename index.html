@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Orbit companion</title>
+  <title>Diya companion</title>
   <link rel="stylesheet" href="renderer.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
         <button id="close" class="quiet" aria-label="Close">&times;</button>
       </div>
 
-      <p class="hover-line" id="hover-line">Point at anything. Orbit keeps the screen private until you use the hotkey.</p>
+      <p class="hover-line" id="hover-line">Point at anything. Diya keeps the screen private until you use the hotkey.</p>
 
       <nav class="modes" aria-label="Mode">
         <button class="mode active" data-mode="coach">ask</button>
@@ -24,14 +24,14 @@
       </nav>
 
       <div class="composer">
-        <input id="prompt" autocomplete="off" placeholder="ask about what is here" aria-label="Ask Orbit">
+        <input id="prompt" autocomplete="off" placeholder="ask about what is here" aria-label="Ask Diya">
         <button id="voice" class="round" title="Speak">&#9673;</button>
-        <button id="ask" class="send" title="Ask Orbit">&#8594;</button>
+        <button id="ask" class="send" title="Ask Diya">&#8594;</button>
       </div>
-      <p class="hint" id="hint"><kbd>Esc</kbd> hide &middot; Orbit only sees a screen after the hotkey</p>
+      <p class="hint" id="hint"><kbd>Esc</kbd> hide &middot; Diya only sees a screen after the hotkey</p>
 
       <section id="answer" class="answer" hidden aria-live="polite">
-        <div class="answer-label" id="answer-mode">orbit</div>
+        <div class="answer-label" id="answer-mode">diya</div>
         <p id="answer-text"></p>
         <div class="answer-actions">
           <button id="draw" class="soft">guide me</button>
@@ -49,7 +49,7 @@
         <div id="connector-row" class="connector-row"></div>
         <div id="connector-form" class="connector-form" hidden>
           <label id="connector-title">Access token<input id="connector-token" type="password" autocomplete="off"></label>
-          <label id="cloud-url-row" hidden>Orbit Cloud URL<input id="cloud-url" type="url" autocomplete="url" placeholder="https://cloud.example.com"></label>
+          <label id="cloud-url-row" hidden>Diya Cloud URL<input id="cloud-url" type="url" autocomplete="url" placeholder="https://cloud.example.com"></label>
           <label id="notion-parent-row" hidden>Notion parent page ID<input id="notion-parent" type="text" autocomplete="off"></label>
           <div><button id="oauth-connector" class="soft" hidden>connect in browser</button><button id="save-connector" class="approve">save</button><button id="disconnect-connector" class="quiet" hidden>disconnect</button></div>
         </div>

@@ -46,7 +46,7 @@ function stringValue(value, label, maximum) {
 
 function checkOrigin(request, config) {
   const origin = request.headers.origin;
-  if (origin && !config.allowedOrigins.has(origin)) throw new HttpError(403, "This origin is not allowed to call Orbit Cloud.", "origin_not_allowed");
+  if (origin && !config.allowedOrigins.has(origin)) throw new HttpError(403, "This origin is not allowed to call Diya Cloud.", "origin_not_allowed");
 }
 
 function bearerToken(request) {
@@ -72,16 +72,16 @@ function createRateLimiter(config) {
     if (now - entry.startedAt >= config.requestWindowMs) { entry.startedAt = now; entry.count = 0; }
     entry.count += 1;
     entries.set(deviceId, entry);
-    if (entry.count > config.requestLimit) throw new HttpError(429, "Orbit Cloud is receiving requests too quickly. Please try again shortly.", "rate_limited");
+    if (entry.count > config.requestLimit) throw new HttpError(429, "Diya Cloud is receiving requests too quickly. Please try again shortly.", "rate_limited");
   };
 }
 
-export function createOrbitServer({ config, database }) {
+export function createDiyaServer({ config, database }) {
   const limit = createRateLimiter(config);
   return http.createServer(async (request, response) => {
     try {
       checkOrigin(request, config);
-      const url = new URL(request.url || "/", "http://orbit.local");
+      const url = new URL(request.url || "/", "http://diya.local");
       const path = url.pathname;
       const callbackMatch = /^\/oauth\/(gmail|notion)\/callback$/.exec(path);
       if (callbackMatch && request.method === "GET") {
@@ -96,14 +96,14 @@ export function createOrbitServer({ config, database }) {
         }
       }
       if (request.method === "GET" && path === "/health") {
-        return sendJson(response, 200, { ok: true, service: "orbit-cloud", openaiConfigured: Boolean(config.openaiApiKey), now: new Date().toISOString() });
+        return sendJson(response, 200, { ok: true, service: "diya-cloud", openaiConfigured: Boolean(config.openaiApiKey), now: new Date().toISOString() });
       }
       if (request.method === "POST" && path === "/v1/device-sessions") {
         const body = await readJson(request);
         const code = stringValue(body.bootstrapCode, "bootstrapCode", 500);
         if (!safeEqual(code, config.bootstrapCode)) throw new HttpError(401, "The pairing code is not valid.", "invalid_pairing_code");
         const accessToken = issueAccessToken();
-        const device = database.createDevice({ name: String(body.deviceName || "Orbit desktop").slice(0, 100), tokenHash: hash(accessToken) });
+        const device = database.createDevice({ name: String(body.deviceName || "Diya desktop").slice(0, 100), tokenHash: hash(accessToken) });
         return sendJson(response, 201, { accessToken, device });
       }
       if (request.method === "GET" && path === "/v1/me") {
@@ -168,12 +168,12 @@ export function createOrbitServer({ config, database }) {
         const body = await readJson(request);
         const action = body.action;
         const provider = action?.kind === "gmail_draft" ? "gmail" : action?.kind === "notion_create_page" ? "notion" : "";
-        if (!PROVIDERS.has(provider)) throw new HttpError(400, "Orbit does not support that approved action.", "unsupported_action");
+        if (!PROVIDERS.has(provider)) throw new HttpError(400, "Diya does not support that approved action.", "unsupported_action");
         const result = await executeApprovedAction({ action, connection: await activeConnection({ provider, deviceId: device.id, config, database }) });
         database.recordUsage(device.id, { kind: "approved_action" });
         return sendJson(response, 200, result);
       }
-      throw new HttpError(404, "Orbit Cloud could not find that endpoint.", "not_found");
+      throw new HttpError(404, "Diya Cloud could not find that endpoint.", "not_found");
     } catch (error) {
       const safe = asHttpError(error);
       return sendJson(response, safe.status, { error: { code: safe.code, message: safe.message } });
