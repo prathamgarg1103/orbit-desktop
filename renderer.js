@@ -15,6 +15,7 @@ const agentActionDetail = document.querySelector("#agent-action-detail");
 const approveAgent = document.querySelector("#approve-agent");
 const connections = document.querySelector("#connections");
 const connectorRow = document.querySelector("#connector-row");
+const cloudUsage = document.querySelector("#cloud-usage");
 const connectorForm = document.querySelector("#connector-form");
 const connectorTitle = document.querySelector("#connector-title");
 const connectorToken = document.querySelector("#connector-token");
@@ -131,8 +132,18 @@ async function loadConnectors() {
 function renderConnectors(connectors) {
   cloudConnected = Boolean(connectors.cloud);
   connectorRow.innerHTML = [["Cloud", "cloud", connectors.cloud], ["OpenAI", "openai", connectors.openai], ["Gmail", "gmail", connectors.gmail], ["Notion", "notion", connectors.notion]].map(([name, provider, connected]) => `<button class="connector ${connected ? "connected" : ""}" data-connector="${provider}" data-connected="${connected}"><i></i>${name}</button>`).join("");
+  renderCloudUsage(connectors.cloudQuota);
   if (!connectors.secureStorage) hoverLine.textContent = "Secure system storage is unavailable, so connections cannot be saved.";
   refreshFeedbackAvailability();
+}
+
+function renderCloudUsage(quota) {
+  const guides = quota?.screenGuides;
+  const actions = quota?.approvedActions;
+  const valid = [guides, actions].every((item) => Number.isFinite(Number(item?.remaining)) && Number.isFinite(Number(item?.limit)));
+  cloudUsage.hidden = !valid;
+  if (!valid) return;
+  cloudUsage.textContent = `beta allowance this month: ${guides.remaining}/${guides.limit} guides · ${actions.remaining}/${actions.limit} actions`;
 }
 
 function toggleSettings() {
@@ -161,6 +172,7 @@ function closeSettings() {
 function openConnectorForm(provider, connected) {
   selectedConnector = provider;
   connectorForm.hidden = false;
+  cloudUsage.hidden = true;
   feedback.hidden = true;
   feedbackForm.hidden = true;
   connectorToken.value = "";

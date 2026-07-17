@@ -82,7 +82,7 @@ function openAiApiKey() {
   return connectorCredentials().openaiApiKey;
 }
 
-let cloudConnectorState = { gmail: false, notion: false };
+let cloudConnectorState = { gmail: false, notion: false, quota: null };
 
 function normalizeCloudUrl(value) {
   let url;
@@ -128,9 +128,9 @@ async function pairCloud(url, enrollmentCode) {
 }
 
 async function refreshCloudConnectors() {
-  if (!cloudConfig()) { cloudConnectorState = { gmail: false, notion: false }; return cloudConnectorState; }
-  const profile = await cloudRequest("/v1/me");
-  cloudConnectorState = { gmail: Boolean(profile.connectors?.gmail), notion: Boolean(profile.connectors?.notion) };
+  if (!cloudConfig()) { cloudConnectorState = { gmail: false, notion: false, quota: null }; return cloudConnectorState; }
+  const [profile, usage] = await Promise.all([cloudRequest("/v1/me"), cloudRequest("/v1/usage")]);
+  cloudConnectorState = { gmail: Boolean(profile.connectors?.gmail), notion: Boolean(profile.connectors?.notion), quota: usage.quota || null };
   return cloudConnectorState;
 }
 
@@ -378,13 +378,14 @@ async function connectorStatus() {
   const credentials = connectorCredentials();
   const cloud = cloudConfig();
   if (cloud) {
-    try { await refreshCloudConnectors(); } catch { cloudConnectorState = { gmail: false, notion: false }; }
+    try { await refreshCloudConnectors(); } catch { cloudConnectorState = { gmail: false, notion: false, quota: null }; }
   }
   return {
     openai: Boolean(credentials.openaiApiKey),
     cloud: Boolean(cloud),
     gmail: Boolean(credentials.gmailAccessToken) || cloudConnectorState.gmail,
     notion: Boolean(credentials.notionToken && credentials.notionParentPageId) || cloudConnectorState.notion,
+    cloudQuota: cloudConnectorState.quota,
     secureStorage: safeStorage.isEncryptionAvailable()
   };
 }
@@ -444,7 +445,7 @@ ipcMain.handle("companion:disconnectConnector", async (_event, provider) => {
   else if (provider === "cloud") {
     try { await cloudRequest("/v1/me/device", { method: "DELETE" }); } catch {}
     saveConnectorCredentials({ cloudUrl: "", cloudToken: "" });
-    cloudConnectorState = { gmail: false, notion: false };
+    cloudConnectorState = { gmail: false, notion: false, quota: null };
   }
   else if (provider === "gmail") {
     if (cloudConfig()) { await cloudRequest("/v1/connectors/gmail", { method: "DELETE" }); await refreshCloudConnectors(); }
