@@ -1,37 +1,37 @@
-# Orbit Cursor Vision demo script (under three minutes)
+# Orbit demo script (under three minutes)
 
-## 0:00-0:20 - The problem
+## 0:00–0:20 — The problem
 
-Show an unfamiliar toolbar control or settings panel.
+Show FL Studio, Claude Code, or another dense tool.
 
-Voiceover: "When I am stuck in an interface, getting help means finding a chat, taking a screenshot, and explaining what I can see. Orbit meets me at the exact element I am trying to understand."
+Voiceover: “When I get stuck in an app, I usually need to stop, take a screenshot, open another chat, and explain the context. Orbit gives me help at the moment I am already working.”
 
-## 0:20-0:55 - The interaction
+## 0:20–0:50 — Hotkey and Talk
 
-Start Orbit. Press `Ctrl` + `Shift` + `Space`. Hover harmless controls in File Explorer or a browser, pausing briefly on each.
+Show a normal app, press `Ctrl` + `Shift` + `Space`, then ask a relevant question with Speak or type it.
 
-Voiceover: "Orbit is not another floating chat window. It is a click-through companion that follows the cursor. When I intentionally turn Cursor Vision on, I pause over a control and get an explanation in place. My mouse still works normally underneath it."
+Voiceover: “Orbit is invisible while I work. I press one hotkey and it captures this moment only. Now I can Talk naturally about what is on my screen.”
 
-## 0:55-1:25 - Context without manual setup
+## 0:50–1:20 — Draw guidance
 
-Hover a button, navigation item, and text field. Do not show passwords or sensitive information.
+Show the answer, then click **Show me on screen**. Point out that the annotation is temporary and click-through. Press `Esc` to hide it.
 
-Voiceover: "I do not have to attach a screenshot or manually describe every button. Orbit reads Windows accessibility metadata beneath the pointer. In live mode it also uses one small, temporary image around the cursor for icons and custom UI. Password contents are hidden, and the feature is off until I choose the hotkey."
+Voiceover: “If a written answer is not enough, I ask Orbit to show me. It draws the next steps on the current screen, then gets out of the way. It is never a cursor follower or a background screen recorder.”
 
-## 1:25-1:55 - GPT-5.6 and the fallback
+## 1:20–1:55 — Agents and voice
 
-Show a concise live explanation with `OPENAI_API_KEY` configured, then point to the local fallback in code.
+Switch to **Agents**. Say or type: “Orbit agent, create a Notion page called launch ideas with these notes.” Show the plan and the explicit approval button.
 
-Voiceover: "GPT-5.6 turns the opted-in metadata and local visual context into a brief explanation of the control's purpose. The key stays in Electron's main process. Without a key, the core hover experience still works in offline mode for a judge."
+Voiceover: “Talk is the conversation. Agents are tasks. I can start an agent with my voice and Orbit turns the request into a safe plan. Nothing external happens until I approve it.”
 
-## 1:55-2:25 - Codex build
+## 1:55–2:25 — Connectors
 
-Show `main.cjs`, `uia-worker.ps1`, and the README.
+Click the Notion or Gmail chip. Show the in-app setup UI and, with a safe test account, approve a Notion page creation or Gmail draft.
 
-Voiceover: "I built Orbit with Codex. Codex helped create the transparent Electron overlay, safe process boundary, Windows UI Automation bridge, cursor-area vision, and GPT-5.6 Responses API path."
+Voiceover: “Connections are configured in the app, not through a terminal. Tokens are kept in the operating system’s encrypted store. Notion creates a page only after approval, and Gmail always creates a draft instead of sending.”
 
-## 2:25-2:45 - Close
+## 2:25–2:45 — OpenAI and Codex
 
-Turn Cursor Vision off and return to the underlying app.
+Show `main.cjs`, `preload.cjs`, the Responses call, and `README.md`.
 
-Voiceover: "Orbit makes interface help available at the moment of confusion without replacing the interface or taking control of the computer."
+Voiceover: “I built Orbit with Codex. GPT-5.6 reasons over the one hotkey-authorized screen capture; OpenAI speech-to-text handles push-to-talk voice. Codex helped build the Electron architecture, privacy boundary, drawing layer, and approval-first agents.”

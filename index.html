@@ -3,18 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Orbit Cursor Vision</title>
+  <title>Orbit — screen companion</title>
   <link rel="stylesheet" href="renderer.css">
 </head>
 <body>
-  <main class="overlay" aria-live="polite">
-    <div class="orb" aria-hidden="true"><span></span><span></span><i></i></div>
-    <section class="card" id="card">
-      <p class="eyebrow" id="eyebrow">ORBIT IS IDLE</p>
-      <h1 id="title">Hover companion</h1>
-      <p id="detail">Press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Space</kbd> to let Orbit explain what is under your cursor.</p>
-      <p class="hint" id="hint">It is click-through and never blocks your mouse.</p>
+  <main class="shell">
+    <header>
+      <div class="brand"><span class="orb">✦</span><span>orbit</span></div>
+      <div class="context" id="context">SCREEN CONTEXT · READY</div>
+      <button id="close" class="icon" aria-label="Close">×</button>
+    </header>
+
+    <section class="hero">
+      <p class="eyebrow" id="mode-label">TALK ABOUT YOUR SCREEN</p>
+      <h1 id="headline">What are you trying to do?</h1>
+      <p id="screen-status">Press the hotkey from any app. Orbit captures that one moment, then gets out of the way.</p>
     </section>
+
+    <nav class="modes" aria-label="Orbit mode">
+      <button class="mode active" data-mode="coach">Talk</button>
+      <button class="mode" data-mode="agent">Agents</button>
+    </nav>
+
+    <section class="connector-row" id="connectors" aria-label="Connector status"></section>
+
+    <section id="connector-setup" class="connector-setup" hidden>
+      <div class="setup-heading"><strong id="connector-title">Connect a service</strong><button id="cancel-connector" class="text-button">Cancel</button></div>
+      <p id="connector-copy">Your credentials are encrypted with your operating system and stay on this computer.</p>
+      <label>Access token<input id="connector-token" type="password" autocomplete="off" placeholder="Paste a scoped access token"></label>
+      <label id="notion-parent-row" hidden>Notion parent page ID<input id="notion-parent" type="text" autocomplete="off" placeholder="The page where Orbit can add child pages"></label>
+      <div class="setup-actions"><button id="save-connector" class="secondary">Save connection</button><button id="disconnect-connector" class="text-button" hidden>Disconnect</button></div>
+    </section>
+
+    <section class="composer">
+      <textarea id="prompt" rows="3" placeholder="Ask about what you are seeing..."></textarea>
+      <div class="composer-actions">
+        <button id="voice" class="secondary">◉ Speak</button>
+        <button id="ask" class="primary">Talk to Orbit <span>↵</span></button>
+      </div>
+      <p id="privacy">Orbit never watches continuously. This hotkey capture lives only for this Orbit session.</p>
+    </section>
+
+    <section id="answer" class="answer" hidden aria-live="polite">
+      <div class="answer-top"><span id="answer-mode">ORBIT TALK</span><button id="draw" class="draw">Show me on screen</button></div>
+      <div id="answer-text"></div>
+      <p id="agent-note" hidden>Agent tasks stop for approval before any Gmail, Notion, or external action.</p>
+      <section id="agent-action" class="agent-action" hidden>
+        <p id="agent-action-detail"></p>
+        <button id="approve-agent" class="primary"></button>
+      </section>
+    </section>
+
+    <footer><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Space</kbd> from any app · <kbd>Esc</kbd> to close</footer>
   </main>
   <script src="renderer.js"></script>
 </body>
