@@ -1,4 +1,5 @@
 import { loadConfig } from "../src/config.mjs";
+import { asHttpError } from "../src/errors.mjs";
 import { openDiyaDatabase } from "../src/open-database.mjs";
 import { createDiyaHandler } from "../src/server.mjs";
 
@@ -19,6 +20,18 @@ async function getRuntime() {
 }
 
 export default async function diya(request, response) {
-  const { handler } = await getRuntime();
-  return handler(request, response);
+  try {
+    const { handler } = await getRuntime();
+    return handler(request, response);
+  } catch (error) {
+    const safe = asHttpError(error);
+    response.writeHead(safe.status, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "no-referrer"
+    });
+    return response.end(JSON.stringify({ error: { code: safe.code, message: safe.message } }));
+  }
 }
