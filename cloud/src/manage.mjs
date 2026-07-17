@@ -31,13 +31,14 @@ function commandHelp() {
     "  npm run admin -- waitlist invite --id <entry-id> [--label <name>] [--expires-days 30]",
     "  npm run admin -- waitlist set-status --id <entry-id> --status declined",
     "  npm run admin -- feedback list [--status new]",
-    "  npm run admin -- feedback set-status --id <feedback-id> --status reviewed"
+    "  npm run admin -- feedback set-status --id <feedback-id> --status reviewed",
+    "  npm run admin -- metrics overview"
   ].join("\n");
 }
 
 export function runAdmin({ args = process.argv.slice(2), env = process.env, write = (value) => process.stdout.write(`${value}\n`) } = {}) {
   const [resource, action, ...options] = args;
-  if (!new Set(["invite", "waitlist", "feedback"]).has(resource) || !action) throw new Error(commandHelp());
+  if (!new Set(["invite", "waitlist", "feedback", "metrics"]).has(resource) || !action) throw new Error(commandHelp());
   const config = loadConfig(env);
   const database = new DiyaDatabase(config.databasePath);
   try {
@@ -123,6 +124,11 @@ export function runAdmin({ args = process.argv.slice(2), env = process.env, writ
       if (!id) throw new Error("feedback set-status needs --id <feedback-id>.");
       if (!new Set(["new", "reviewed", "resolved"]).has(status)) throw new Error("feedback status must be new, reviewed, or resolved.");
       const result = { id, status, updated: database.updateFeedbackStatus(id, status) };
+      write(JSON.stringify(result, null, 2));
+      return result;
+    }
+    if (resource === "metrics" && action === "overview") {
+      const result = { metrics: database.operatorMetrics() };
       write(JSON.stringify(result, null, 2));
       return result;
     }

@@ -61,6 +61,14 @@ docker compose -f compose.production.yml exec -T cloud node src/manage.mjs feedb
 docker compose -f compose.production.yml exec -T cloud node src/manage.mjs feedback set-status --id <feedback-id> --status reviewed
 ```
 
+For a content-free daily beta snapshot, run:
+
+```bash
+docker compose -f compose.production.yml exec -T cloud node src/manage.mjs metrics overview
+```
+
+Use it to spot invite drop-off, active-device growth, guide/action engagement, and unreplied feedback without exporting customer data.
+
 ## 4. Operate safely
 
 - Back up the `diya-cloud-data` Docker volume and the encryption key together; the database is not useful without the key.

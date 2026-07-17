@@ -304,6 +304,58 @@ export class DiyaDatabase {
     return this.db.prepare("UPDATE feedback_entries SET status = ?, updated_at = ? WHERE id = ?").run(String(status), now(), String(id)).changes > 0;
   }
 
+  operatorMetrics() {
+    const asOf = now();
+    const activeSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const count = (row, key) => Number(row?.[key] || 0);
+    const waitlist = this.db.prepare(`
+      SELECT COUNT(*) AS total,
+        SUM(CASE WHEN status = 'requested' THEN 1 ELSE 0 END) AS requested,
+        SUM(CASE WHEN status = 'invited' THEN 1 ELSE 0 END) AS invited,
+        SUM(CASE WHEN status = 'declined' THEN 1 ELSE 0 END) AS declined
+      FROM waitlist_entries
+    `).get();
+    const invites = this.db.prepare(`
+      SELECT COUNT(*) AS total,
+        SUM(CASE WHEN revoked_at IS NULL AND uses = 0 AND (expires_at IS NULL OR expires_at > ?) THEN 1 ELSE 0 END) AS pending,
+        SUM(CASE WHEN uses > 0 THEN 1 ELSE 0 END) AS consumed,
+        SUM(CASE WHEN revoked_at IS NOT NULL THEN 1 ELSE 0 END) AS revoked,
+        SUM(CASE WHEN revoked_at IS NULL AND uses = 0 AND expires_at IS NOT NULL AND expires_at <= ? THEN 1 ELSE 0 END) AS expired
+      FROM invites
+    `).get(asOf, asOf);
+    const devices = this.db.prepare(`
+      SELECT COUNT(*) AS total,
+        SUM(CASE WHEN revoked_at IS NULL THEN 1 ELSE 0 END) AS active,
+        SUM(CASE WHEN revoked_at IS NULL AND last_seen_at >= ? THEN 1 ELSE 0 END) AS activeLast7Days,
+        SUM(CASE WHEN revoked_at IS NOT NULL THEN 1 ELSE 0 END) AS revoked
+      FROM devices
+    `).get(activeSince);
+    const engagement = this.db.prepare(`
+      SELECT
+        SUM(CASE WHEN kind = 'screen_guide' THEN 1 ELSE 0 END) AS screenGuides,
+        SUM(CASE WHEN kind = 'approved_action' THEN 1 ELSE 0 END) AS approvedActions,
+        SUM(CASE WHEN kind = 'screen_guide' AND created_at >= ? THEN 1 ELSE 0 END) AS screenGuidesLast7Days,
+        SUM(CASE WHEN kind = 'approved_action' AND created_at >= ? THEN 1 ELSE 0 END) AS approvedActionsLast7Days
+      FROM usage_events
+    `).get(activeSince, activeSince);
+    const feedback = this.db.prepare(`
+      SELECT COUNT(*) AS total,
+        SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) AS new,
+        SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) AS reviewed,
+        SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) AS resolved
+      FROM feedback_entries
+    `).get();
+    return {
+      asOf,
+      activeSince,
+      waitlist: { total: count(waitlist, "total"), requested: count(waitlist, "requested"), invited: count(waitlist, "invited"), declined: count(waitlist, "declined") },
+      invites: { total: count(invites, "total"), pending: count(invites, "pending"), consumed: count(invites, "consumed"), revoked: count(invites, "revoked"), expired: count(invites, "expired") },
+      devices: { total: count(devices, "total"), active: count(devices, "active"), activeLast7Days: count(devices, "activeLast7Days"), revoked: count(devices, "revoked") },
+      engagement: { screenGuides: count(engagement, "screenGuides"), approvedActions: count(engagement, "approvedActions"), screenGuidesLast7Days: count(engagement, "screenGuidesLast7Days"), approvedActionsLast7Days: count(engagement, "approvedActionsLast7Days") },
+      feedback: { total: count(feedback, "total"), new: count(feedback, "new"), reviewed: count(feedback, "reviewed"), resolved: count(feedback, "resolved") }
+    };
+  }
+
   connectorStatus(deviceId) {
     const connected = new Set(this.db.prepare("SELECT provider FROM connections WHERE device_id = ?").all(deviceId).map((row) => row.provider));
     return { gmail: connected.has("gmail"), notion: connected.has("notion") };

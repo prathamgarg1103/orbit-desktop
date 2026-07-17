@@ -67,12 +67,21 @@ test("issues, lists, revokes, and safely converts waitlist requests into one-tim
       category: "bug",
       encryptedMessage: seal("The hover label did not update in one app.", key)
     });
+    feedbackDatabase.recordUsage(feedbackDevice.id, { kind: "screen_guide", model: "gpt-5.6", imageBytes: 1200 });
+    feedbackDatabase.recordUsage(feedbackDevice.id, { kind: "approved_action" });
     feedbackDatabase.close();
     const feedback = runAdmin({ args: ["feedback", "list"], env: environment, write: () => {} }).feedback;
     assert.equal(feedback[0].message, "The hover label did not update in one app.");
     assert.equal(feedback[0].email, "hello@example.com");
     assert.equal(runAdmin({ args: ["feedback", "set-status", "--id", feedback[0].id, "--status", "reviewed"], env: environment, write: () => {} }).updated, true);
     assert.equal(runAdmin({ args: ["feedback", "list", "--status", "reviewed"], env: environment, write: () => {} }).feedback.length, 1);
+    const metrics = runAdmin({ args: ["metrics", "overview"], env: environment, write: () => {} }).metrics;
+    assert.deepEqual(metrics.waitlist, { total: 2, requested: 1, invited: 1, declined: 0 });
+    assert.deepEqual(metrics.invites, { total: 2, pending: 1, consumed: 0, revoked: 1, expired: 0 });
+    assert.deepEqual(metrics.devices, { total: 1, active: 1, activeLast7Days: 1, revoked: 0 });
+    assert.deepEqual(metrics.engagement, { screenGuides: 1, approvedActions: 1, screenGuidesLast7Days: 1, approvedActionsLast7Days: 1 });
+    assert.deepEqual(metrics.feedback, { total: 1, new: 0, reviewed: 1, resolved: 0 });
+    assert.equal(JSON.stringify(metrics).includes("hello@example.com"), false);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }

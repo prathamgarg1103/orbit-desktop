@@ -53,6 +53,16 @@ npm run admin -- feedback list --status new
 npm run admin -- feedback set-status --id <feedback-id> --status reviewed
 ```
 
+## Beta metrics
+
+Use the operator-only overview to assess the funnel without reading user content or exposing PII:
+
+```bash
+npm run admin -- metrics overview
+```
+
+It returns aggregate waitlist states, pending/consumed/revoked invites, enrolled and recently active devices, all-time and seven-day guide/action counts, plus feedback workflow counts. It returns no emails, screen images, prompts, model responses, or feedback text.
+
 ## APIs
 
 - `GET /` and `GET /privacy` - public Diya launch and privacy pages.
