@@ -23,12 +23,18 @@ export function launchPage() {
     .mark::before, .cursor::before { position:absolute; inset:0; border:1px solid #d9fff2; background:linear-gradient(145deg,#ffffff 0,#98f5d0 54%,#ffc861 100%); clip-path:polygon(0 0,100% 47%,60% 59%,45% 100%,30% 65%,0 82%); content:""; }
     .mark::after, .cursor::after { position:absolute; border-radius:50%; background:#fff; box-shadow:0 0 10px 3px #9cf5ce; content:""; }
     .mark::after { top:8px; left:7px; width:4px; height:4px; }
-    .nav a:last-child { color:#b5c0b9; font-size:13px; text-underline-offset:4px; }
+    .nav-links { display:flex; align-items:center; gap:16px; }
+    .nav-links a { color:#b5c0b9; font-size:13px; text-underline-offset:4px; }
+    .nav-links .download { border:1px solid #ffffff24; border-radius:8px; padding:8px 10px; color:#101317; background:#9eeec8; font-weight:800; text-decoration:none; }
     main { display:grid; min-height:calc(100vh - 104px); grid-template-columns:minmax(0,1.02fr) minmax(310px,.98fr); align-items:center; gap:66px; padding:62px 0 72px; }
     .eyebrow { margin:0 0 18px; color:#9eeec8; font-size:12px; font-weight:760; text-transform:uppercase; }
     h1 { max-width:690px; margin:0; color:#fff; font-size:clamp(46px,7vw,82px); line-height:1; letter-spacing:0; }
     h1 em { color:#ffd173; font-style:normal; }
     .lede { max-width:575px; margin:24px 0 0; color:#c5cec7; font-size:18px; line-height:1.6; }
+    .cta-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:30px 0 0; }
+    .cta { display:inline-flex; align-items:center; min-height:44px; border-radius:8px; padding:0 16px; color:#101317; background:#9eeec8; font-size:14px; font-weight:820; text-decoration:none; }
+    .cta:hover, .nav-links .download:hover { background:#ffd173; }
+    .release-link { color:#b5c0b9; font-size:13px; text-underline-offset:4px; }
     .signals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; max-width:640px; margin:30px 0 0; }
     .signals span { min-height:58px; border:1px solid #ffffff1c; border-radius:8px; padding:12px; color:#dce4dd; background:#ffffff08; font-size:13px; line-height:1.35; }
     .stage { position:relative; min-height:430px; border:1px solid #ffffff1d; background:#151a1f; box-shadow:0 22px 80px #00000059; overflow:hidden; }
@@ -62,17 +68,18 @@ export function launchPage() {
     .foot { display:flex; justify-content:space-between; gap:20px; color:#88948d; font-size:12px; }
     .foot a { text-underline-offset:4px; }
     @media (max-width:860px) { main { grid-template-columns:1fr; gap:42px; padding-top:54px; } .stage { min-height:360px; } }
-    @media (max-width:620px) { .shell { width:min(100% - 32px,560px); } .signals { grid-template-columns:1fr; } h1 { font-size:clamp(42px,13vw,64px); } .lede { font-size:16px; } .input-row { display:block; } button { width:100%; min-height:46px; margin-top:9px; } .foot { flex-direction:column; } }
+    @media (max-width:620px) { .shell { width:min(100% - 32px,560px); } .nav { align-items:flex-start; } .nav-links { flex-direction:column; align-items:flex-end; gap:10px; } .signals { grid-template-columns:1fr; } h1 { font-size:clamp(42px,13vw,64px); } .lede { font-size:16px; } .input-row { display:block; } button { width:100%; min-height:46px; margin-top:9px; } .foot { flex-direction:column; } }
   </style>
 </head>
 <body>
   <div class="shell">
-    <nav class="nav"><a class="wordmark" href="/"><span class="mark"></span>diya</a><a href="/privacy">privacy at a glance</a></nav>
+    <nav class="nav"><a class="wordmark" href="/"><span class="mark"></span>diya</a><div class="nav-links"><a href="/privacy">privacy at a glance</a><a class="download" href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">download beta</a></div></nav>
     <main>
       <section>
         <p class="eyebrow">Early access for Windows</p>
         <h1>A second cursor for when software gets <em>opaque.</em></h1>
         <p class="lede">Press the hotkey, let Diya see the current screen once, and ask out loud. It answers in context, points at the interface, and only runs connected agents after you approve the action.</p>
+        <div class="cta-row"><a class="cta" href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">Download Windows beta</a><a class="release-link" href="https://github.com/prathamgarg1103/orbit-desktop/releases/tag/v0.11.1">View release notes</a></div>
         <div class="signals"><span>Screen context starts only after your hotkey.</span><span>Guidance is drawn over the tool, not trapped in chat.</span><span>Gmail and Notion actions wait for approval.</span></div>
       </section>
       <section aria-labelledby="access-title">

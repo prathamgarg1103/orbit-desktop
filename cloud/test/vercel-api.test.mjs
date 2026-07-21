@@ -22,6 +22,7 @@ test("returns a safe configuration response when the Vercel function has not rec
     assert.equal(homepage.status, 200);
     const homepageText = await homepage.text();
     assert.match(homepageText, /A second cursor for when software gets <em>opaque/);
+    assert.match(homepageText, /Diya\.0\.11\.1\.exe/);
     assert.match(homepageText, /The private beta list is being connected/);
     const privacy = await fetch(`${url}/privacy`);
     assert.equal(privacy.status, 200);
