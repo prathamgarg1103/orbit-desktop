@@ -1,7 +1,7 @@
 import http from "node:http";
 import { executeApprovedAction } from "./agent-actions.mjs";
 import { HttpError, asHttpError } from "./errors.mjs";
-import { launchPage, privacyPage, PUBLIC_PAGE_CSP } from "./landing.mjs";
+import { launchPage, privacyPage, statusPage, PUBLIC_PAGE_CSP } from "./landing.mjs";
 import { activeConnection, completeOAuth, oauthErrorPage, startOAuth } from "./oauth.mjs";
 import { createScreenGuide } from "./screen-guide.mjs";
 import { hash, issueAccessToken, keyedHash, safeEqual, seal } from "./security.mjs";
@@ -178,6 +178,7 @@ export function createDiyaHandler({ config, database }) {
       const path = url.pathname;
       if (request.method === "GET" && path === "/") return sendPublicHtml(response, 200, launchPage());
       if (request.method === "GET" && path === "/privacy") return sendPublicHtml(response, 200, privacyPage());
+      if (request.method === "GET" && path === "/status") return sendPublicHtml(response, 200, statusPage());
       if (request.method === "POST" && path === "/v1/waitlist") {
         limitPublic(request);
         const email = normalizedEmail((await readJson(request)).email);

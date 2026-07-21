@@ -78,13 +78,15 @@ async function main() {
   const exePath = `dist\\Diya ${packageJson.version}.exe`;
   const landing = await getText("https://diya-cloud.vercel.app/");
   const privacy = await getText("https://diya-cloud.vercel.app/privacy");
+  const statusPage = await getText("https://diya-cloud.vercel.app/status");
   const health = await getJson("https://diya-cloud.vercel.app/health");
   const publicSiteReady = Boolean(
     landing.ok && landing.body.includes("A second cursor for when software gets") &&
     landing.body.includes(downloadUrl) &&
     landing.body.includes(releaseUrl) &&
     landing.body.includes(betaFeedbackUrl) &&
-    privacy.ok && privacy.body.includes("Privacy at a glance")
+    privacy.ok && privacy.body.includes("Privacy at a glance") &&
+    statusPage.ok && statusPage.body.includes("Diya beta status")
   );
   const liveCloudReady = Boolean(health.ok && health.body && health.body.ok === true && health.body.openaiConfigured === true);
 
@@ -106,7 +108,8 @@ async function main() {
     check("Windows beta download link", landing.ok && landing.body.includes(downloadUrl), downloadUrl),
     check("release notes link", landing.ok && landing.body.includes(releaseUrl), releaseUrl),
     check("beta feedback link", landing.ok && landing.body.includes(betaFeedbackUrl), betaFeedbackUrl),
-    check("privacy page", privacy.ok && privacy.body.includes("Privacy at a glance"), privacy.ok ? "https://diya-cloud.vercel.app/privacy" : `HTTP ${privacy.statusCode}: ${privacy.body.slice(0, 160)}`)
+    check("privacy page", privacy.ok && privacy.body.includes("Privacy at a glance"), privacy.ok ? "https://diya-cloud.vercel.app/privacy" : `HTTP ${privacy.statusCode}: ${privacy.body.slice(0, 160)}`),
+    check("status page", statusPage.ok && statusPage.body.includes("Diya beta status"), statusPage.ok ? "https://diya-cloud.vercel.app/status" : `HTTP ${statusPage.statusCode}: ${statusPage.body.slice(0, 160)}`)
   ];
 
   const cloudApiChecks = [

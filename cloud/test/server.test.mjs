@@ -57,6 +57,11 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     const privacy = await fetch(`${cloudUrl}/privacy`);
     assert.equal(privacy.status, 200);
     assert.match(await privacy.text(), /Privacy at a glance/);
+    const status = await fetch(`${cloudUrl}/status`);
+    assert.equal(status.status, 200);
+    const statusText = await status.text();
+    assert.match(statusText, /Diya beta status/);
+    assert.match(statusText, /Cloud pairing/);
     const beta = await request(cloudUrl, "/v1/waitlist", { method: "POST", body: JSON.stringify({ email: "Beta.User@example.com" }) });
     assert.equal(beta.status, 202);
     assert.equal(beta.body.accepted, true);

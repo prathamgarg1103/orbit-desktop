@@ -17,6 +17,7 @@
 - Privacy policy: `PRIVACY.md`.
 - Release notes: `RELEASE_NOTES_v0.11.1.md`.
 - Public landing page: live at `https://diya-cloud.vercel.app`.
+- Public status page: live at `https://diya-cloud.vercel.app/status`.
 
 ## Ready to show
 
@@ -29,6 +30,7 @@
 - Local Notion and Gmail connector demo paths.
 - Diya Cloud source, schema, encryption model, pairing flow, limits, and deployment runbook.
 - Public Diya landing and privacy pages on Vercel.
+- Public Diya beta status page on Vercel.
 - Public landing page download links to the `v0.11.1` Windows beta and release notes.
 - Repo privacy/data-handling policy for beta users and judges.
 - Supabase project `vjhwyqujehvzvweyjnmr` has the expected Diya Cloud tables, RLS enabled, and no `anon`/`authenticated` table select access.

@@ -74,7 +74,7 @@ export function launchPage() {
 </head>
 <body>
   <div class="shell">
-    <nav class="nav"><a class="wordmark" href="/"><span class="mark"></span>diya</a><div class="nav-links"><a href="/privacy">privacy at a glance</a><a href="${BETA_FEEDBACK_URL}">report beta issue</a><a class="download" href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">download beta</a></div></nav>
+    <nav class="nav"><a class="wordmark" href="/"><span class="mark"></span>diya</a><div class="nav-links"><a href="/privacy">privacy at a glance</a><a href="/status">beta status</a><a href="${BETA_FEEDBACK_URL}">report beta issue</a><a class="download" href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">download beta</a></div></nav>
     <main>
       <section>
         <p class="eyebrow">Early access for Windows</p>
@@ -136,6 +136,48 @@ export function privacyPage() {
 </head>
 <body>
   <main class="page"><a class="brand" href="/">diya</a><h1>Privacy at a glance.</h1><p class="intro">Diya is designed around explicit context: it does not silently record your screen in the background.</p><section class="items"><article class="item"><h2>Screen context</h2><p>Diya captures a screen only after you use its hotkey. Diya Cloud forwards that image for the active guide request with response storage disabled, then discards it from process memory. It does not retain screenshots, questions, or model answers.</p></article><article class="item"><h2>Early-access email</h2><p>If you request beta access here, Diya Cloud stores your email encrypted at rest plus a keyed duplicate-prevention fingerprint. The email is used only to reply about the beta.</p></article><article class="item"><h2>Beta feedback</h2><p>If an enrolled beta user sends a feedback note from Diya Settings, it is encrypted at rest and never includes their active screen, prompt, or model answer. When that device used a waitlist invite, the beta operator can associate the note with that supplied email to reply.</p></article><article class="item"><h2>Connected tools</h2><p>Optional Gmail and Notion tokens are encrypted at rest. Diya asks for approval before any connected action; Gmail support creates drafts rather than sending email.</p></article></section><p class="small">This page describes the current Diya beta implementation. Product, support, and legal details should be finalized before a broad public launch.</p></main>
+</body>
+</html>`;
+}
+
+export function statusPage() {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Diya status</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#f5f7f2;background:#101317}
+    *{box-sizing:border-box}
+    body{margin:0;background:#101317}
+    .page{width:min(860px,calc(100% - 40px));margin:0 auto;padding:48px 0 80px}
+    a{color:#9eeec8;text-underline-offset:4px}
+    .brand{color:#fff;font-weight:800;text-decoration:none}
+    h1{margin:40px 0 10px;font-size:clamp(38px,8vw,64px);line-height:1}
+    p{color:#c5cec7;line-height:1.65}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:30px 0}
+    .card{border:1px solid #ffffff1f;border-radius:10px;padding:18px;background:#ffffff08}
+    .card h2{margin:0 0 8px;color:#fff;font-size:17px}
+    .status{display:inline-flex;border-radius:999px;padding:4px 9px;margin-bottom:10px;color:#101317;background:#9eeec8;font-size:12px;font-weight:800}
+    .pending{background:#ffd173}
+    .small{font-size:13px;color:#9ca7a1}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="brand" href="/">diya</a>
+    <h1>Diya beta status.</h1>
+    <p>This page separates what is already public from what still depends on production secrets.</p>
+    <section class="grid">
+      <article class="card"><span class="status">live</span><h2>Windows beta</h2><p>The portable Diya build is available from the public release.</p><p><a href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">Download Diya 0.11.1</a></p></article>
+      <article class="card"><span class="status">live</span><h2>Public site</h2><p>Landing, privacy summary, release notes, and beta feedback intake are live.</p><p><a href="${BETA_FEEDBACK_URL}">Report beta feedback</a></p></article>
+      <article class="card"><span class="status pending">pending secrets</span><h2>Cloud pairing</h2><p>Hosted pairing becomes live after Vercel has DIYA_DATABASE_URL and OPENAI_API_KEY configured.</p><p><a href="/health">View live health JSON</a></p></article>
+      <article class="card"><span class="status">ready in repo</span><h2>Startup operating kit</h2><p>Runbook, beta outreach, privacy notes, and GitHub issue intake are ready in the repository.</p><p><a href="https://github.com/prathamgarg1103/orbit-desktop">Open repository</a></p></article>
+    </section>
+    <p class="small">Diya does not watch in the background. Screen context starts only after the hotkey.</p>
+  </main>
 </body>
 </html>`;
 }

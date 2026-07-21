@@ -1,6 +1,6 @@
 import { loadConfig } from "../src/config.mjs";
 import { asHttpError } from "../src/errors.mjs";
-import { launchPage, privacyPage, PUBLIC_PAGE_CSP } from "../src/landing.mjs";
+import { launchPage, privacyPage, statusPage, PUBLIC_PAGE_CSP } from "../src/landing.mjs";
 import { openDiyaDatabase } from "../src/open-database.mjs";
 import { missingEnvironmentNames } from "../src/preflight.mjs";
 import { createDiyaHandler } from "../src/server.mjs";
@@ -67,6 +67,7 @@ export default async function diya(request, response) {
     const path = publicPath(request);
     if (path === "/") return sendPublicHtml(response, launchPage());
     if (path === "/privacy") return sendPublicHtml(response, privacyPage());
+    if (path === "/status") return sendPublicHtml(response, statusPage());
   }
 
   try {

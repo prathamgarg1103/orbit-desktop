@@ -28,6 +28,9 @@ test("returns a safe configuration response when the Vercel function has not rec
     const privacy = await fetch(`${url}/privacy`);
     assert.equal(privacy.status, 200);
     assert.match(await privacy.text(), /Privacy at a glance/);
+    const status = await fetch(`${url}/status`);
+    assert.equal(status.status, 200);
+    assert.match(await status.text(), /Diya beta status/);
     const response = await fetch(`${url}/health`);
     const body = await response.json();
     assert.equal(response.status, 503);
