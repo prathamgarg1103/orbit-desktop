@@ -12,6 +12,7 @@
 - Windows beta download: `https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe`.
 - Submission docs: `SUBMISSION.md` and `DEMO_SCRIPT.md`.
 - Beta plan: `BETA_LAUNCH_PLAN.md`.
+- Startup runbook: `STARTUP_RUNBOOK.md`.
 - Privacy policy: `PRIVACY.md`.
 - Release notes: `RELEASE_NOTES_v0.11.1.md`.
 - Public landing page: live at `https://diya-cloud.vercel.app`.
@@ -60,4 +61,4 @@ Use `npm run submission:check` before submitting. It exits successfully when the
 
 Use `npm run submission:bundle` to create `dist\submission\Diya-hackathon-submission.zip` with the app, submission copy, demo script, readiness notes, README, license, and a manifest.
 
-After submitting, use `BETA_LAUNCH_PLAN.md` as the first private-beta operating plan.
+After submitting, use `BETA_LAUNCH_PLAN.md` and `STARTUP_RUNBOOK.md` as the first private-beta operating plan.

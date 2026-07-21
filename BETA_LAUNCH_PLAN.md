@@ -6,7 +6,7 @@ This plan starts after the hackathon submission is uploaded. Its job is to turn 
 
 - Desktop prototype: ready for a local Windows demo.
 - Public site: live at `https://diya-cloud.vercel.app`.
-- GitHub release: `v0.11.0` with the Windows app and hackathon bundle.
+- GitHub release: `v0.11.1` with the Windows app and hackathon bundle.
 - Cloud API: implemented, but not production-green until `DIYA_DATABASE_URL` and `OPENAI_API_KEY` are configured in Vercel.
 - Product promise to keep: Diya is a small second cursor that sees the current screen only after the hotkey, teaches the next step in-place, and runs connected agents only after approval.
 
@@ -72,6 +72,6 @@ Continue only if at least three beta users independently ask to keep using Diya 
 ## Submission links
 
 - Public site: `https://diya-cloud.vercel.app`
-- Release: `https://github.com/prathamgarg1103/orbit-desktop/releases/tag/v0.11.0`
-- Windows app: `https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.0/Diya.0.11.0.exe`
-- Submission bundle: `https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.0/Diya-hackathon-submission.zip`
+- Release: `https://github.com/prathamgarg1103/orbit-desktop/releases/tag/v0.11.1`
+- Windows app: `https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe`
+- Submission bundle: `https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya-hackathon-submission.zip`
