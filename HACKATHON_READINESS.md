@@ -29,6 +29,7 @@
 - Public Diya landing and privacy pages on Vercel.
 - Public landing page download links to the `v0.11.1` Windows beta and release notes.
 - Repo privacy/data-handling policy for beta users and judges.
+- Supabase project `vjhwyqujehvzvweyjnmr` has the expected Diya Cloud tables, RLS enabled, and no `anon`/`authenticated` table select access.
 
 ## Not ready to claim yet
 
