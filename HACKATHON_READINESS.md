@@ -13,6 +13,7 @@
 - Submission docs: `SUBMISSION.md` and `DEMO_SCRIPT.md`.
 - Beta plan: `BETA_LAUNCH_PLAN.md`.
 - Startup runbook: `STARTUP_RUNBOOK.md`.
+- Product roadmap: `PRODUCT_ROADMAP.md`.
 - Beta outreach kit: `BETA_OUTREACH_KIT.md`.
 - Privacy policy: `PRIVACY.md`.
 - Beta support: `SUPPORT.md`.
@@ -36,6 +37,7 @@
 - Public landing page download links to the `v0.11.1` Windows beta and release notes.
 - Repo privacy/data-handling policy for beta users and judges.
 - Repo beta support and security disclosure boundaries.
+- Evidence-gated product roadmap for post-hackathon startup decisions.
 - Supabase project `vjhwyqujehvzvweyjnmr` has the expected Diya Cloud tables, RLS enabled, and no `anon`/`authenticated` table select access.
 
 ## Not ready to claim yet
