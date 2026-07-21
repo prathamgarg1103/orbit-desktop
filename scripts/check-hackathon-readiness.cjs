@@ -87,7 +87,8 @@ async function main() {
     check("portable Windows app exists", exists(exePath), exePath),
     check("submission copy exists", exists("SUBMISSION.md"), "SUBMISSION.md"),
     check("demo script exists", exists("DEMO_SCRIPT.md"), "DEMO_SCRIPT.md"),
-    check("readiness checklist exists", exists("HACKATHON_READINESS.md"), "HACKATHON_READINESS.md")
+    check("readiness checklist exists", exists("HACKATHON_READINESS.md"), "HACKATHON_READINESS.md"),
+    check("beta launch plan exists", exists("BETA_LAUNCH_PLAN.md"), "BETA_LAUNCH_PLAN.md")
   ];
 
   const publicChecks = [

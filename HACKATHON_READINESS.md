@@ -9,6 +9,7 @@
 - Submission bundle: `npm run submission:bundle`.
 - Public Cloud URL: `https://diya-cloud.vercel.app`.
 - Submission docs: `SUBMISSION.md` and `DEMO_SCRIPT.md`.
+- Beta plan: `BETA_LAUNCH_PLAN.md`.
 - Public landing page: live at `https://diya-cloud.vercel.app`.
 
 ## Ready to show
@@ -52,3 +53,5 @@ Submit Diya as a working Windows desktop prototype with a live public site and a
 Use `npm run submission:check` before submitting. It exits successfully when the local demo package is ready and prints the live Cloud status. Use `npm run submission:check:cloud` only when the submission must require a fully green hosted Cloud.
 
 Use `npm run submission:bundle` to create `dist\submission\Diya-hackathon-submission.zip` with the app, submission copy, demo script, readiness notes, README, license, and a manifest.
+
+After submitting, use `BETA_LAUNCH_PLAN.md` as the first private-beta operating plan.
