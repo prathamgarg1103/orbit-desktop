@@ -77,6 +77,8 @@ Then sort every issue into one of four buckets:
 
 Only fix bugs that improve one of these four buckets.
 
+If a tester reports a reproducible issue, file it with the GitHub `Diya beta bug` template. If the session teaches you something about positioning, trust, or repeat usage, file it with the `Diya beta learning` template. Keep secrets, tokens, and sensitive screen content out of issues.
+
 ## Metrics that matter
 
 Track these manually for the first 10 users:

@@ -1,0 +1,53 @@
+name: Diya beta learning
+description: Capture an interview note or product signal from a beta session.
+title: "[Beta learning]: "
+labels: ["beta", "learning"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for founder notes after a beta session. Keep private user details out of the issue.
+  - type: input
+    id: persona
+    attributes:
+      label: Tester persona
+      placeholder: "producer, developer, operator, creator..."
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: Tool tested
+      placeholder: "FL Studio, VS Code, Notion, Gmail..."
+    validations:
+      required: true
+  - type: dropdown
+    id: signal
+    attributes:
+      label: Signal strength
+      options:
+        - "strong: asked to keep using Diya"
+        - "medium: had one useful moment"
+        - "weak: did not reach for it again"
+        - "negative: trust or usefulness failed"
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: What happened?
+      description: Capture concrete behavior, not polished interpretation.
+    validations:
+      required: true
+  - type: textarea
+    id: quote
+    attributes:
+      label: Useful quote
+      description: Optional. Paraphrase if the exact quote includes private content.
+  - type: textarea
+    id: next
+    attributes:
+      label: Product implication
+      placeholder: "Targeting fix, trust copy, narrower app wedge, agent flow change..."
+    validations:
+      required: true
