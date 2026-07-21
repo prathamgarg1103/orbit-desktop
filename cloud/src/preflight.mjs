@@ -6,6 +6,18 @@ function domainFrom(env) {
   return String(env.DIYA_DOMAIN || env.ORBIT_DOMAIN || "").trim().toLowerCase();
 }
 
+export function missingEnvironmentNames(env = process.env) {
+  const missing = [];
+  for (const name of ["DIYA_ENCRYPTION_KEY", "DIYA_BOOTSTRAP_CODE"]) {
+    if (!String(env[name] || env[`ORBIT_${name.slice("DIYA_".length)}`] || "").trim()) missing.push(name);
+  }
+  if (env.VERCEL && !String(env.DIYA_DATABASE_URL || env.ORBIT_DATABASE_URL || "").trim()) missing.push("DIYA_DATABASE_URL");
+  if (!String(env.OPENAI_API_KEY || "").trim()) missing.push("OPENAI_API_KEY");
+  if (!String(env.DIYA_PUBLIC_URL || env.ORBIT_PUBLIC_URL || "").trim()) missing.push("DIYA_PUBLIC_URL");
+  if (!domainFrom(env)) missing.push("DIYA_DOMAIN");
+  return missing;
+}
+
 function check(name, passed, detail, required = true) {
   return { name, passed: Boolean(passed), required, detail };
 }

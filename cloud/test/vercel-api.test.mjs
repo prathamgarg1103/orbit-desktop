@@ -12,9 +12,10 @@ function close(server) {
 }
 
 test("returns a safe configuration response when the Vercel function has not received its secrets", async () => {
-  const names = ["DIYA_ENCRYPTION_KEY", "DIYA_BOOTSTRAP_CODE", "DIYA_DATABASE_URL"];
+  const names = ["VERCEL", "DIYA_ENCRYPTION_KEY", "DIYA_BOOTSTRAP_CODE", "DIYA_DATABASE_URL", "OPENAI_API_KEY", "DIYA_PUBLIC_URL", "DIYA_DOMAIN"];
   const previous = new Map(names.map((name) => [name, process.env[name]]));
   for (const name of names) delete process.env[name];
+  process.env.VERCEL = "1";
   const server = http.createServer(diya);
   const url = await listen(server);
   try {
@@ -29,9 +30,12 @@ test("returns a safe configuration response when the Vercel function has not rec
     assert.match(await privacy.text(), /Privacy at a glance/);
     const response = await fetch(`${url}/health`);
     const body = await response.json();
-    assert.equal(response.status, 500);
+    assert.equal(response.status, 503);
+    assert.equal(body.ok, false);
+    assert.equal(body.ready, false);
     assert.equal(body.error.code, "configuration_error");
     assert.match(body.error.message, /DIYA_ENCRYPTION_KEY/);
+    assert.deepEqual(body.missing, ["DIYA_ENCRYPTION_KEY", "DIYA_BOOTSTRAP_CODE", "DIYA_DATABASE_URL", "OPENAI_API_KEY", "DIYA_PUBLIC_URL", "DIYA_DOMAIN"]);
     assert.equal(response.headers.get("cache-control"), "no-store");
   } finally {
     for (const [name, value] of previous) {

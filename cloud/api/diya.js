@@ -2,6 +2,7 @@ import { loadConfig } from "../src/config.mjs";
 import { asHttpError } from "../src/errors.mjs";
 import { launchPage, privacyPage, PUBLIC_PAGE_CSP } from "../src/landing.mjs";
 import { openDiyaDatabase } from "../src/open-database.mjs";
+import { missingEnvironmentNames } from "../src/preflight.mjs";
 import { createDiyaHandler } from "../src/server.mjs";
 
 export const config = { maxDuration: 60 };
@@ -39,6 +40,28 @@ function sendPublicHtml(response, html) {
   response.end(html);
 }
 
+function sendConfigurationHealth(request, response, error) {
+  const path = publicPath(request);
+  if (request.method !== "GET" || path !== "/health") return false;
+  const safe = asHttpError(error);
+  response.writeHead(503, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer"
+  });
+  response.end(JSON.stringify({
+    ok: false,
+    service: "diya-cloud",
+    ready: false,
+    error: { code: safe.code, message: safe.message },
+    missing: missingEnvironmentNames(process.env),
+    now: new Date().toISOString()
+  }));
+  return true;
+}
+
 export default async function diya(request, response) {
   if (request.method === "GET") {
     const path = publicPath(request);
@@ -50,6 +73,7 @@ export default async function diya(request, response) {
     const { handler } = await getRuntime();
     return handler(request, response);
   } catch (error) {
+    if (sendConfigurationHealth(request, response, error)) return;
     const safe = asHttpError(error);
     response.writeHead(safe.status, {
       "Content-Type": "application/json; charset=utf-8",

@@ -35,6 +35,7 @@
 - The hosted Diya Cloud API is not production-green until Vercel has both `DIYA_DATABASE_URL` and `OPENAI_API_KEY`.
 - The OpenAI key cannot be created or saved by Codex until the secure local destination confirmation is approved in the app.
 - Supabase's database password cannot be retrieved by Codex. Set `DIYA_DATABASE_URL` in Vercel from the Supabase dashboard transaction pooler string.
+- While production secrets are missing, `/health` returns a secret-safe `503` with the names of missing environment variables. It never returns secret values.
 
 ## Final go-live checklist
 
