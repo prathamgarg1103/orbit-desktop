@@ -50,7 +50,7 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     const homepage = await fetch(cloudUrl);
     assert.equal(homepage.status, 200);
     assert.match(homepage.headers.get("content-security-policy"), /form-action 'self'/);
-    assert.match(await homepage.text(), /Your screen is the <em>prompt/);
+    assert.match(await homepage.text(), /A second cursor for when software gets <em>opaque/);
     const privacy = await fetch(`${cloudUrl}/privacy`);
     assert.equal(privacy.status, 200);
     assert.match(await privacy.text(), /Privacy at a glance/);
