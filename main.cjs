@@ -13,6 +13,10 @@ const CURSOR_GAP = 9;
 const POINTER_COMPANION_SIZE = { width: 38, height: 44 };
 const MIN_COMPANION_SIZE = { ...POINTER_COMPANION_SIZE };
 const MAX_COMPANION_SIZE = { width: 420, height: 520 };
+const PUBLIC_LINKS = Object.freeze({
+  status: "https://diya-cloud.vercel.app/status",
+  help: "https://github.com/prathamgarg1103/orbit-desktop/issues/new/choose"
+});
 
 const GUIDE_SCHEMA = {
   type: "object",
@@ -140,6 +144,13 @@ async function startCloudOAuth(provider) {
   if (!result.authorizationUrl) throw new Error("Diya Cloud did not return an authorization URL.");
   await shell.openExternal(result.authorizationUrl);
   return { started: true };
+}
+
+async function openPublicLink(kind) {
+  const url = PUBLIC_LINKS[String(kind || "")];
+  if (!url) throw new Error("Diya can only open known beta links.");
+  await shell.openExternal(url);
+  return { opened: true };
 }
 
 function saveConnectorCredentials(next) {
@@ -482,6 +493,7 @@ ipcMain.handle("companion:approveAgent", async (_event, taskId) => {
 ipcMain.handle("companion:transcribe", async (_event, payload) => transcribeAudio(payload));
 ipcMain.handle("companion:draw", async (_event, payload) => showGuidance(payload?.steps));
 ipcMain.handle("companion:startOAuth", async (_event, provider) => startCloudOAuth(String(provider || "")));
+ipcMain.handle("companion:openLink", async (_event, kind) => openPublicLink(kind));
 
 function displayForContext() {
   return screen.getAllDisplays().find((item) => item.id === latestContext?.displayId)

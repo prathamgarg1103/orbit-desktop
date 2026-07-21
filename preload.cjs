@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld("diya", {
   sendFeedback: (payload) => ipcRenderer.invoke("companion:sendFeedback", payload),
   approveAgent: (taskId) => ipcRenderer.invoke("companion:approveAgent", taskId),
   startOAuth: (provider) => ipcRenderer.invoke("companion:startOAuth", provider),
+  openLink: (kind) => ipcRenderer.invoke("companion:openLink", kind),
   transcribe: (payload) => ipcRenderer.invoke("companion:transcribe", payload),
   onOpened: (callback) => ipcRenderer.on("companion:opened", (_event, payload) => callback(payload)),
   onPrompt: (callback) => ipcRenderer.on("companion:prompt", () => callback()),

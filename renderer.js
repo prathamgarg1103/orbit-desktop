@@ -16,6 +16,8 @@ const approveAgent = document.querySelector("#approve-agent");
 const connections = document.querySelector("#connections");
 const connectorRow = document.querySelector("#connector-row");
 const cloudUsage = document.querySelector("#cloud-usage");
+const openCloudStatus = document.querySelector("#open-cloud-status");
+const openBetaHelp = document.querySelector("#open-beta-help");
 const connectorForm = document.querySelector("#connector-form");
 const connectorTitle = document.querySelector("#connector-title");
 const connectorToken = document.querySelector("#connector-token");
@@ -59,6 +61,8 @@ disconnectConnector.onclick = disconnectSelectedConnector;
 oauthConnector.onclick = startSelectedOAuth;
 openFeedback.onclick = toggleFeedback;
 submitFeedback.onclick = sendFeedback;
+openCloudStatus.onclick = () => openDiyaLink("status");
+openBetaHelp.onclick = () => openDiyaLink("help");
 connectorRow.onclick = (event) => {
   const button = event.target.closest("[data-connector]");
   if (button) openConnectorForm(button.dataset.connector, button.dataset.connected === "true");
@@ -202,6 +206,14 @@ async function startSelectedOAuth() {
     hoverLine.textContent = error.message || "Diya could not start the browser connection.";
   } finally {
     oauthConnector.disabled = false;
+  }
+}
+
+async function openDiyaLink(kind) {
+  try {
+    await window.diya.openLink(kind);
+  } catch (error) {
+    hoverLine.textContent = error.message || "Diya could not open that link.";
   }
 }
 
