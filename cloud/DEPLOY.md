@@ -21,6 +21,18 @@ Diya Cloud supports a managed **Vercel + Supabase** deployment for the public be
    - `DIYA_MONTHLY_SCREEN_GUIDE_LIMIT` and `DIYA_MONTHLY_APPROVED_ACTION_LIMIT` — per-device UTC-month spend caps.
 4. Deploy to production and verify `/health`, `/`, `/privacy`, and a one-time desktop pairing. Add Google and Notion provider values only after their redirect URLs are registered.
 
+If you prefer a local prompt instead of the Vercel dashboard, run this from the repository root. It reads secrets from your terminal without printing them:
+
+```powershell
+.\scripts\configure-vercel-production.ps1 -Redeploy
+```
+
+If you already created an OpenAI key manually and want the same helper to add it too:
+
+```powershell
+.\scripts\configure-vercel-production.ps1 -IncludeOpenAIKey -Redeploy
+```
+
 The Cloud API never uses a Supabase browser key or service-role key. It connects only from the Vercel Node function through the password-bearing database URL; keep this value server-only. The schema enables RLS and revokes browser Data API access.
 
 ## Docker VM (self-managed alternative)
@@ -49,7 +61,7 @@ Create a Notion **public connection** and register:
 
 `https://cloud.yourdomain.com/oauth/notion/callback`
 
-Choose the intended Notion installation scope in the Creator dashboard. Notion’s page picker grants access to selected pages; afterward, add the chosen parent page ID in Diya’s Notion settings so the agent knows where to create pages.
+Choose the intended Notion installation scope in the Creator dashboard. Notion's page picker grants access to selected pages; afterward, add the chosen parent page ID in Diya's Notion settings so the agent knows where to create pages.
 
 Put the four provider values in `.env` as `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `NOTION_OAUTH_CLIENT_ID`, and `NOTION_OAUTH_CLIENT_SECRET`.
 

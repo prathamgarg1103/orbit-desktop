@@ -35,6 +35,12 @@
 6. Verify `https://diya-cloud.vercel.app/health` returns `ok: true` and `openaiConfigured: true`.
 7. Record the demo video and submit `SUBMISSION.md` copy with the repo, app artifact, and live URL.
 
+Shortcut for step 2 after you have the Supabase URL:
+
+```powershell
+.\scripts\configure-vercel-production.ps1 -Redeploy
+```
+
 ## Submission framing if time is tight
 
 Submit Diya as a working Windows desktop prototype with a production Cloud foundation implemented. Be precise: the local app and code are demo-ready; the public Cloud URL becomes live after the two remaining secrets are configured.
