@@ -18,6 +18,12 @@ test("returns a safe configuration response when the Vercel function has not rec
   const server = http.createServer(diya);
   const url = await listen(server);
   try {
+    const homepage = await fetch(url);
+    assert.equal(homepage.status, 200);
+    assert.match(await homepage.text(), /A second cursor for when software gets <em>opaque/);
+    const privacy = await fetch(`${url}/privacy`);
+    assert.equal(privacy.status, 200);
+    assert.match(await privacy.text(), /Privacy at a glance/);
     const response = await fetch(`${url}/health`);
     const body = await response.json();
     assert.equal(response.status, 500);

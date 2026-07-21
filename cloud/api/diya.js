@@ -1,5 +1,6 @@
 import { loadConfig } from "../src/config.mjs";
 import { asHttpError } from "../src/errors.mjs";
+import { launchPage, privacyPage, PUBLIC_PAGE_CSP } from "../src/landing.mjs";
 import { openDiyaDatabase } from "../src/open-database.mjs";
 import { createDiyaHandler } from "../src/server.mjs";
 
@@ -19,7 +20,32 @@ async function getRuntime() {
   return runtime;
 }
 
+function publicPath(request) {
+  const url = new URL(request.url || "/", "https://diya-cloud.local");
+  const rewrittenPath = url.searchParams.get("diyaPath");
+  if (rewrittenPath !== null) return `/${rewrittenPath.replace(/^\/+/, "")}`;
+  return url.pathname;
+}
+
+function sendPublicHtml(response, html) {
+  response.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store",
+    "Content-Security-Policy": PUBLIC_PAGE_CSP,
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY"
+  });
+  response.end(html);
+}
+
 export default async function diya(request, response) {
+  if (request.method === "GET") {
+    const path = publicPath(request);
+    if (path === "/") return sendPublicHtml(response, launchPage());
+    if (path === "/privacy") return sendPublicHtml(response, privacyPage());
+  }
+
   try {
     const { handler } = await getRuntime();
     return handler(request, response);
