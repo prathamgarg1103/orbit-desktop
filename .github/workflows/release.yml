@@ -46,11 +46,18 @@ jobs:
       - run: npm ci
       - run: npm ci --prefix cloud
       - run: npm run dist
+      - run: npm run submission:bundle
       - name: Upload portable artifact
         uses: actions/upload-artifact@v4
         with:
           name: Diya-portable-Windows
           path: dist/Diya *.exe
+          if-no-files-found: error
+      - name: Upload hackathon submission bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Diya-hackathon-submission
+          path: dist/submission/Diya-hackathon-submission.zip
           if-no-files-found: error
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -60,4 +67,4 @@ jobs:
         run: |
           $version = node -p "require('./package.json').version"
           if ($env:GITHUB_REF_NAME -ne "v$version") { throw "Tag $env:GITHUB_REF_NAME must match package version v$version." }
-          gh release create $env:GITHUB_REF_NAME "dist/Diya $version.exe" --title "Diya $version" --generate-notes
+          gh release create $env:GITHUB_REF_NAME "dist/Diya $version.exe" "dist/submission/Diya-hackathon-submission.zip" --title "Diya $version" --generate-notes
