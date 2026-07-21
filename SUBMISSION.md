@@ -1,4 +1,4 @@
-# Diya — submission kit
+# Diya - submission kit
 
 ## Paste-ready entry
 
@@ -27,6 +27,12 @@ Diya is an original name, visual system, and implementation inspired by the scre
 4. Press `Ctrl` + `Shift` + `G` to advance the guide. Press `Esc` to close it and clear the active session.
 5. Switch to **Agent** and ask for a task. Use the settings gear to connect test Notion or Gmail credentials; actions require approval and Gmail only creates drafts.
 6. For live visual reasoning and OpenAI transcription, use the in-app OpenAI connection before testing. The production-shaped alternative is [Diya Cloud](cloud/README.md): pair the desktop with a one-time code so the server owns the product OpenAI key.
+
+## Submission readiness
+
+- **Ready now:** local Windows demo, portable app artifact, repository, demo script, privacy story, second-cursor interaction, on-screen guide, local approval-first agent flow, and Diya Cloud source.
+- **Needs final production secrets:** the hosted Diya Cloud URL must receive `DIYA_DATABASE_URL` and `OPENAI_API_KEY` in Vercel before it can be judged as a live cloud product.
+- **Recommended submission framing until cloud is green:** submit Diya as a working Windows prototype with a production Cloud path implemented, and show Cloud as the startup foundation rather than claiming the public URL is fully live.
 
 ## Final submission fields to add yourself
 
