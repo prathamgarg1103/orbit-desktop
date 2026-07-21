@@ -1,6 +1,7 @@
 param(
   [switch]$IncludeOpenAIKey,
-  [switch]$Redeploy
+  [switch]$Redeploy,
+  [switch]$Verify
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,12 +28,26 @@ function Add-VercelSecret {
 
   Push-Location $cloudRoot
   try {
-    & $npx vercel@56.3.1 env add $Name production --value $Value --yes --sensitive
+    $Value | & $npx vercel@56.3.1 env add $Name production --yes --sensitive --force
     if ($LASTEXITCODE -ne 0) {
-      throw "Could not add $Name. If it already exists, remove it in Vercel or run: npx vercel@56.3.1 env rm $Name production --yes"
+      throw "Could not add $Name."
     }
   } finally {
     Pop-Location
+  }
+}
+
+function Test-DiyaCloudHealth {
+  try {
+    $response = Invoke-WebRequest -Uri "https://diya-cloud.vercel.app/health" -UseBasicParsing -TimeoutSec 30
+    return $response.Content
+  } catch {
+    if ($_.Exception.Response) {
+      $stream = $_.Exception.Response.GetResponseStream()
+      $reader = [System.IO.StreamReader]::new($stream)
+      return $reader.ReadToEnd()
+    }
+    return $_.Exception.Message
   }
 }
 
@@ -71,6 +86,11 @@ if ($Redeploy) {
   } finally {
     Pop-Location
   }
+}
+
+if ($Verify) {
+  Write-Host "Health response:"
+  Write-Host (Test-DiyaCloudHealth)
 }
 
 Write-Host "Done. Verify: https://diya-cloud.vercel.app/health"
