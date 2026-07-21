@@ -12,6 +12,7 @@
 - Windows beta download: `https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe`.
 - Submission docs: `SUBMISSION.md` and `DEMO_SCRIPT.md`.
 - Beta plan: `BETA_LAUNCH_PLAN.md`.
+- Privacy policy: `PRIVACY.md`.
 - Release notes: `RELEASE_NOTES_v0.11.1.md`.
 - Public landing page: live at `https://diya-cloud.vercel.app`.
 
@@ -27,6 +28,7 @@
 - Diya Cloud source, schema, encryption model, pairing flow, limits, and deployment runbook.
 - Public Diya landing and privacy pages on Vercel.
 - Public landing page download links to the `v0.11.1` Windows beta and release notes.
+- Repo privacy/data-handling policy for beta users and judges.
 
 ## Not ready to claim yet
 

@@ -15,7 +15,7 @@ Diya is a Windows desktop AI companion for getting unstuck inside any app. Press
 - Talk mode with typed or spoken questions.
 - On-screen target ring, guide cursor, and step advancement.
 - Approval-first Agent mode with local Notion/Gmail demo paths.
-- Submission copy, demo script, readiness checklist, and beta launch plan.
+- Submission copy, demo script, readiness checklist, beta launch plan, and privacy/data handling policy.
 
 ## What is still being connected
 

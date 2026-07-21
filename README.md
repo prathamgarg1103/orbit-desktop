@@ -27,6 +27,8 @@ Disconnecting **Cloud** in Diya revokes that desktop's server-side device token 
 
 See [Diya Cloud setup](cloud/README.md) and the [deployment runbook](cloud/DEPLOY.md). Production deployment still needs your HTTPS domain plus Google and Notion OAuth application credentials; the code is ready, but those real callback registrations cannot be invented locally.
 
+See [privacy and data handling](PRIVACY.md) for the beta privacy boundary.
+
 ## Run from source
 
 ```powershell
@@ -39,10 +41,10 @@ Use the gear button in Diya to connect OpenAI without a terminal. Developers can
 
 ## Controls
 
-- `Ctrl` + `Shift` + `Space` — capture the current display and activate Diya's small second cursor; press it again to open the ask panel.
-- `Ctrl` + `Shift` + `G` — advance to the next on-screen guide step.
-- `Esc` — dismiss the guide, then Diya and its in-memory screen context.
-- **Voice button** — start and stop a spoken request.
+- `Ctrl` + `Shift` + `Space` - capture the current display and activate Diya's small second cursor; press it again to open the ask panel.
+- `Ctrl` + `Shift` + `G` - advance to the next on-screen guide step.
+- `Esc` - dismiss the guide, then Diya and its in-memory screen context.
+- **Voice button** - start and stop a spoken request.
 
 ## Package a portable Windows app
 
@@ -69,4 +71,5 @@ The tag must exactly match the desktop package version. A manual workflow dispat
 - [Devpost submission copy](SUBMISSION.md)
 - [Under-three-minute demo script](DEMO_SCRIPT.md)
 - [Beta launch plan](BETA_LAUNCH_PLAN.md)
+- [Privacy and data handling](PRIVACY.md)
 - [MIT license](LICENSE)
