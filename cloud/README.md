@@ -34,10 +34,10 @@ This is the recommended public-beta path. The API remains a single Node.js Verce
 4. Set `DIYA_DATABASE_URL` to the Supabase **Transaction pooler** connection string with `?sslmode=require`. It stays server-only and must never use a `NEXT_PUBLIC_` prefix.
 5. Deploy, then pair the desktop using the Vercel production URL. Run `npm run preflight` from an operator machine with the same server variables before issuing invites.
 
-From this repository root, the Windows go-live helper prompts for the two remaining server secrets without printing them or passing them as command-line values:
+From this repository root, the Windows go-live helper prompts for the two remaining server secrets without printing them or passing them as command-line values. For the current Supabase project, you can paste only the database password and let the helper build the transaction-pooler URL:
 
 ```powershell
-.\scripts\configure-vercel-production.ps1 -IncludeOpenAIKey -Redeploy -Verify
+.\scripts\configure-vercel-production.ps1 -BuildSupabaseUrlFromPassword -IncludeOpenAIKey -Redeploy -Verify
 ```
 
 The migration enables RLS and removes `anon` and `authenticated` table access. Diya Cloud connects only with the server-side Postgres credential and continues to encrypt connector tokens, waitlist emails, and feedback before writing them.

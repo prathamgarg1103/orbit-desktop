@@ -1,7 +1,11 @@
 param(
   [switch]$IncludeOpenAIKey,
   [switch]$Redeploy,
-  [switch]$Verify
+  [switch]$Verify,
+  [switch]$BuildSupabaseUrlFromPassword,
+  [switch]$SelfTest,
+  [string]$SupabaseProjectRef = "vjhwyqujehvzvweyjnmr",
+  [string]$SupabasePoolerHost = "aws-0-ap-south-1.pooler.supabase.com"
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,6 +41,24 @@ function Add-VercelSecret {
   }
 }
 
+function New-SupabasePoolerUrl {
+  param(
+    [Parameter(Mandatory = $true)][string]$ProjectRef,
+    [Parameter(Mandatory = $true)][string]$PoolerHost,
+    [Parameter(Mandatory = $true)][string]$Password
+  )
+
+  if ($ProjectRef -notmatch "^[a-z0-9]+$") {
+    throw "Supabase project ref should contain only lowercase letters and numbers."
+  }
+  if ($PoolerHost -notmatch "^[a-z0-9.-]+$") {
+    throw "Supabase pooler host is not valid."
+  }
+
+  $encodedPassword = [System.Uri]::EscapeDataString($Password)
+  return "postgresql://postgres.${ProjectRef}:$encodedPassword@${PoolerHost}:6543/postgres?sslmode=require"
+}
+
 function Test-DiyaCloudHealth {
   try {
     $response = Invoke-WebRequest -Uri "https://diya-cloud.vercel.app/health" -UseBasicParsing -TimeoutSec 30
@@ -51,11 +73,28 @@ function Test-DiyaCloudHealth {
   }
 }
 
+if ($SelfTest) {
+  $url = New-SupabasePoolerUrl -ProjectRef "abc123" -PoolerHost "aws-0-test.pooler.supabase.com" -Password "p@ss word!"
+  $expected = "postgresql://postgres.abc123:p%40ss%20word!@aws-0-test.pooler.supabase.com:6543/postgres?sslmode=require"
+  if ($url -ne $expected) {
+    throw "Supabase pooler URL self-test failed."
+  }
+  Write-Host "configure-vercel-production self-test OK."
+  exit 0
+}
+
 Write-Host "Configuring Diya Cloud production secrets for Vercel."
 Write-Host "Values are read locally and are not printed by this script."
 
-$databaseUrlSecure = Read-Host "Paste Supabase Transaction pooler URL for DIYA_DATABASE_URL" -AsSecureString
-$databaseUrl = ConvertFrom-SecureStringPlainText $databaseUrlSecure
+if ($BuildSupabaseUrlFromPassword) {
+  Write-Host "Building DIYA_DATABASE_URL for Supabase project $SupabaseProjectRef through $SupabasePoolerHost."
+  $databasePasswordSecure = Read-Host "Paste Supabase database password" -AsSecureString
+  $databasePassword = ConvertFrom-SecureStringPlainText $databasePasswordSecure
+  $databaseUrl = New-SupabasePoolerUrl -ProjectRef $SupabaseProjectRef -PoolerHost $SupabasePoolerHost -Password $databasePassword
+} else {
+  $databaseUrlSecure = Read-Host "Paste Supabase Transaction pooler URL for DIYA_DATABASE_URL" -AsSecureString
+  $databaseUrl = ConvertFrom-SecureStringPlainText $databaseUrlSecure
+}
 if (-not $databaseUrl.StartsWith("postgresql://")) {
   throw "DIYA_DATABASE_URL must start with postgresql://"
 }

@@ -40,18 +40,16 @@
 
 ## Final go-live checklist
 
-1. In Supabase, copy the transaction pooler connection string for project `vjhwyqujehvzvweyjnmr`.
-2. In Vercel project `diya-cloud`, add it as Production env var `DIYA_DATABASE_URL`.
-3. Approve the OpenAI local-save confirmation for `cloud/.env`.
-4. Let Codex create the encrypted OpenAI key, save it locally, and add it to Vercel as `OPENAI_API_KEY`.
-5. Redeploy Diya Cloud.
-6. Verify `https://diya-cloud.vercel.app/health` returns `ok: true` and `openaiConfigured: true`.
-7. Record the demo video and submit `SUBMISSION.md` copy with the repo, app artifact, and live URL.
+1. In Supabase, copy the database password for project `vjhwyqujehvzvweyjnmr`.
+2. Approve the OpenAI local-save confirmation for `cloud/.env`, or create an OpenAI project key manually.
+3. Run the go-live helper below. It builds `DIYA_DATABASE_URL`, adds `OPENAI_API_KEY`, redeploys Vercel, and verifies `/health`.
+4. Verify `https://diya-cloud.vercel.app/health` returns `ok: true` and `openaiConfigured: true`.
+5. Record the demo video and submit `SUBMISSION.md` copy with the repo, app artifact, and live URL.
 
-Shortcut for step 2 after you have the Supabase URL:
+Shortcut after you have the Supabase database password and OpenAI key:
 
 ```powershell
-.\scripts\configure-vercel-production.ps1 -Redeploy
+.\scripts\configure-vercel-production.ps1 -BuildSupabaseUrlFromPassword -IncludeOpenAIKey -Redeploy -Verify
 ```
 
 ## Submission framing if time is tight

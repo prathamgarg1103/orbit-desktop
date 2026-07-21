@@ -16,4 +16,9 @@ foreach ($relativePath in $scripts) {
   }
 }
 
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repoRoot "scripts\configure-vercel-production.ps1") -SelfTest
+if ($LASTEXITCODE -ne 0) {
+  throw "configure-vercel-production self-test failed."
+}
+
 Write-Host "PowerShell script syntax OK."
