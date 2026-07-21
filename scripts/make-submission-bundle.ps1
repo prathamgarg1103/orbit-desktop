@@ -50,6 +50,8 @@ $files = @(
   @{ Source = Join-Path $repoRoot "STARTUP_RUNBOOK.md"; Target = "STARTUP_RUNBOOK.md" },
   @{ Source = Join-Path $repoRoot "BETA_OUTREACH_KIT.md"; Target = "BETA_OUTREACH_KIT.md" },
   @{ Source = Join-Path $repoRoot "PRIVACY.md"; Target = "PRIVACY.md" },
+  @{ Source = Join-Path $repoRoot "SUPPORT.md"; Target = "SUPPORT.md" },
+  @{ Source = Join-Path $repoRoot "SECURITY.md"; Target = "SECURITY.md" },
   @{ Source = Join-Path $repoRoot "RELEASE_NOTES_v$version.md"; Target = "RELEASE_NOTES_v$version.md" },
   @{ Source = Join-Path $repoRoot "README.md"; Target = "README.md" },
   @{ Source = Join-Path $repoRoot "LICENSE"; Target = "LICENSE" }
@@ -87,6 +89,8 @@ $manifest = @(
   "- STARTUP_RUNBOOK.md",
   "- BETA_OUTREACH_KIT.md",
   "- PRIVACY.md",
+  "- SUPPORT.md",
+  "- SECURITY.md",
   "- RELEASE_NOTES_v$version.md",
   "- README.md",
   "- LICENSE"

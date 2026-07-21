@@ -15,6 +15,8 @@
 - Startup runbook: `STARTUP_RUNBOOK.md`.
 - Beta outreach kit: `BETA_OUTREACH_KIT.md`.
 - Privacy policy: `PRIVACY.md`.
+- Beta support: `SUPPORT.md`.
+- Security policy: `SECURITY.md`.
 - Release notes: `RELEASE_NOTES_v0.11.1.md`.
 - Public landing page: live at `https://diya-cloud.vercel.app`.
 - Public status page: live at `https://diya-cloud.vercel.app/status`.
@@ -33,6 +35,7 @@
 - Public Diya beta status page on Vercel.
 - Public landing page download links to the `v0.11.1` Windows beta and release notes.
 - Repo privacy/data-handling policy for beta users and judges.
+- Repo beta support and security disclosure boundaries.
 - Supabase project `vjhwyqujehvzvweyjnmr` has the expected Diya Cloud tables, RLS enabled, and no `anon`/`authenticated` table select access.
 
 ## Not ready to claim yet

@@ -74,4 +74,6 @@ The tag must exactly match the desktop package version. A manual workflow dispat
 - [Startup runbook](STARTUP_RUNBOOK.md)
 - [Beta outreach kit](BETA_OUTREACH_KIT.md)
 - [Privacy and data handling](PRIVACY.md)
+- [Beta support](SUPPORT.md)
+- [Security policy](SECURITY.md)
 - [MIT license](LICENSE)

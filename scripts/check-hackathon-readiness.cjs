@@ -100,6 +100,8 @@ async function main() {
     check("startup runbook exists", exists("STARTUP_RUNBOOK.md"), "STARTUP_RUNBOOK.md"),
     check("beta outreach kit exists", exists("BETA_OUTREACH_KIT.md"), "BETA_OUTREACH_KIT.md"),
     check("privacy policy exists", exists("PRIVACY.md"), "PRIVACY.md"),
+    check("beta support doc exists", exists("SUPPORT.md"), "SUPPORT.md"),
+    check("security policy exists", exists("SECURITY.md"), "SECURITY.md"),
     check("release notes exist", exists(`RELEASE_NOTES_v${packageJson.version}.md`), `RELEASE_NOTES_v${packageJson.version}.md`)
   ];
 
