@@ -47,6 +47,7 @@ $files = @(
   @{ Source = Join-Path $repoRoot "DEMO_SCRIPT.md"; Target = "DEMO_SCRIPT.md" },
   @{ Source = Join-Path $repoRoot "HACKATHON_READINESS.md"; Target = "HACKATHON_READINESS.md" },
   @{ Source = Join-Path $repoRoot "BETA_LAUNCH_PLAN.md"; Target = "BETA_LAUNCH_PLAN.md" },
+  @{ Source = Join-Path $repoRoot "RELEASE_NOTES_v$version.md"; Target = "RELEASE_NOTES_v$version.md" },
   @{ Source = Join-Path $repoRoot "README.md"; Target = "README.md" },
   @{ Source = Join-Path $repoRoot "LICENSE"; Target = "LICENSE" }
 )
@@ -80,6 +81,7 @@ $manifest = @(
   "- DEMO_SCRIPT.md",
   "- HACKATHON_READINESS.md",
   "- BETA_LAUNCH_PLAN.md",
+  "- RELEASE_NOTES_v$version.md",
   "- README.md",
   "- LICENSE"
 )

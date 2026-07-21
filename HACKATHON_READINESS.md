@@ -12,6 +12,7 @@
 - Windows beta download: `https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe`.
 - Submission docs: `SUBMISSION.md` and `DEMO_SCRIPT.md`.
 - Beta plan: `BETA_LAUNCH_PLAN.md`.
+- Release notes: `RELEASE_NOTES_v0.11.1.md`.
 - Public landing page: live at `https://diya-cloud.vercel.app`.
 
 ## Ready to show
