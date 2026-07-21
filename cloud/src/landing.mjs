@@ -161,6 +161,7 @@ export function statusPage() {
     .card h2{margin:0 0 8px;color:#fff;font-size:17px}
     .status{display:inline-flex;border-radius:999px;padding:4px 9px;margin-bottom:10px;color:#101317;background:#9eeec8;font-size:12px;font-weight:800}
     .pending{background:#ffd173}
+    .down{background:#ffb0a8}
     .small{font-size:13px;color:#9ca7a1}
     @media (max-width:720px){.grid{grid-template-columns:1fr}}
   </style>
@@ -173,11 +174,32 @@ export function statusPage() {
     <section class="grid">
       <article class="card"><span class="status">live</span><h2>Windows beta</h2><p>The portable Diya build is available from the public release.</p><p><a href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">Download Diya 0.11.1</a></p></article>
       <article class="card"><span class="status">live</span><h2>Public site</h2><p>Landing, privacy summary, release notes, and beta feedback intake are live.</p><p><a href="${BETA_FEEDBACK_URL}">Report beta feedback</a></p></article>
-      <article class="card"><span class="status pending">pending secrets</span><h2>Cloud pairing</h2><p>Hosted pairing becomes live after Vercel has DIYA_DATABASE_URL and OPENAI_API_KEY configured.</p><p><a href="/health">View live health JSON</a></p></article>
+      <article class="card"><span class="status pending" id="cloud-status-label">checking</span><h2>Cloud pairing</h2><p id="cloud-status-copy">Checking the live Cloud health endpoint...</p><p><a href="/health">View live health JSON</a></p></article>
       <article class="card"><span class="status">ready in repo</span><h2>Startup operating kit</h2><p>Runbook, beta outreach, privacy notes, and GitHub issue intake are ready in the repository.</p><p><a href="https://github.com/prathamgarg1103/orbit-desktop">Open repository</a></p></article>
     </section>
     <p class="small">Diya does not watch in the background. Screen context starts only after the hotkey.</p>
   </main>
+  <script>
+    const label = document.querySelector('#cloud-status-label');
+    const copy = document.querySelector('#cloud-status-copy');
+    fetch('/health', { cache: 'no-store' }).then(async (response) => {
+      const body = await response.json().catch(() => ({}));
+      if (response.ok && body && body.ok && body.openaiConfigured) {
+        label.textContent = 'live';
+        label.className = 'status';
+        copy.textContent = 'Hosted Cloud pairing is configured and ready for beta devices.';
+        return;
+      }
+      const missing = Array.isArray(body.missing) && body.missing.length ? body.missing.join(', ') : 'production secrets';
+      label.textContent = 'pending secrets';
+      label.className = 'status pending';
+      copy.textContent = 'Hosted pairing becomes live after these are configured: ' + missing + '.';
+    }).catch(() => {
+      label.textContent = 'status unavailable';
+      label.className = 'status down';
+      copy.textContent = 'The browser could not reach the live Cloud health endpoint.';
+    });
+  </script>
 </body>
 </html>`;
 }

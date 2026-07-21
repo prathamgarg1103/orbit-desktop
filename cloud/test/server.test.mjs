@@ -62,6 +62,7 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     const statusText = await status.text();
     assert.match(statusText, /Diya beta status/);
     assert.match(statusText, /Cloud pairing/);
+    assert.match(statusText, /cloud-status-label/);
     const beta = await request(cloudUrl, "/v1/waitlist", { method: "POST", body: JSON.stringify({ email: "Beta.User@example.com" }) });
     assert.equal(beta.status, 202);
     assert.equal(beta.body.accepted, true);
