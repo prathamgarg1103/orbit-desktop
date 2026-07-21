@@ -8,6 +8,9 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $packageJsonPath = Join-Path $repoRoot "package.json"
 $packageJson = Get-Content -LiteralPath $packageJsonPath -Raw | ConvertFrom-Json
 $version = $packageJson.version
+$releaseUrl = "https://github.com/prathamgarg1103/orbit-desktop/releases/tag/v$version"
+$downloadUrl = "https://github.com/prathamgarg1103/orbit-desktop/releases/download/v$version/Diya.$version.exe"
+$publicSiteUrl = "https://diya-cloud.vercel.app"
 $bundleRoot = Join-Path $repoRoot "dist\submission"
 $bundleDir = Join-Path $bundleRoot "Diya-hackathon-submission"
 $zipPath = Join-Path $bundleRoot "Diya-hackathon-submission.zip"
@@ -63,6 +66,9 @@ $manifest = @(
   "Version: $version",
   "Created: $((Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"))",
   "Commit: $commit",
+  "Public site: $publicSiteUrl",
+  "Release: $releaseUrl",
+  "Windows beta download: $downloadUrl",
   "Repository status:",
   '```',
   $status,

@@ -6,6 +6,11 @@
 - **Tagline:** A second cursor that sees your current screen, teaches the next step, and launches approval-first agents.
 - **Category:** Work & Productivity
 - **Built with:** Codex, GPT-5.6, OpenAI Responses API, OpenAI speech-to-text, Electron, Node.js, SQLite, JavaScript, HTML/CSS
+- **Public site:** https://diya-cloud.vercel.app
+- **Repository:** https://github.com/prathamgarg1103/orbit-desktop
+- **Release:** https://github.com/prathamgarg1103/orbit-desktop/releases/tag/v0.11.1
+- **Windows beta download:** https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe
+- **Submission bundle:** https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya-hackathon-submission.zip
 
 ## Description
 
@@ -21,7 +26,7 @@ Diya is an original name, visual system, and implementation inspired by the scre
 
 ## Judge testing notes
 
-1. Run `npm install` and `npm start` in this directory, or use `dist\Diya 0.11.0.exe` after building.
+1. Run `npm install` and `npm start` in this directory, or use the `v0.11.1` Windows beta release.
 2. Place another application on screen and press `Ctrl` + `Shift` + `Space`.
 3. Move the pointer over controls with only Diya's second cursor visible. Press the hotkey again to ask a Talk question, then choose **Guide me**.
 4. Press `Ctrl` + `Shift` + `G` to advance the guide. Press `Esc` to close it and clear the active session.
@@ -36,7 +41,6 @@ Diya is an original name, visual system, and implementation inspired by the scre
 
 ## Final submission fields to add yourself
 
-- Public repository URL or the required private sharing arrangement.
 - A public demo video URL under the event limit.
 - The Codex feedback/session identifier from your build task, if the event asks for it.
 - Actual team and eligibility fields.
