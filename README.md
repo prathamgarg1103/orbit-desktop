@@ -51,15 +51,15 @@ npm run check
 npm run dist
 ```
 
-The portable artifact is written to `dist\Diya 0.11.0.exe`.
+The portable artifact is written to `dist\Diya 0.11.1.exe`.
 
 ## Release a beta build
 
 GitHub Actions verifies pull requests and `main` pushes. A version tag builds the portable Windows app and publishes it as a GitHub Release automatically. After updating `package.json` to the intended version, create a matching tag:
 
 ```powershell
-git tag -a v0.11.0 -m "Diya 0.11.0"
-git push origin v0.11.0
+git tag -a v0.11.1 -m "Diya 0.11.1"
+git push origin v0.11.1
 ```
 
 The tag must exactly match the desktop package version. A manual workflow dispatch builds a downloadable artifact without creating a release.

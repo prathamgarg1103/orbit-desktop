@@ -3,7 +3,7 @@
 ## Current state
 
 - Repository: pushed to GitHub on `main`.
-- Desktop app: portable Windows build exists at `dist\Diya 0.11.0.exe`.
+- Desktop app: portable Windows build exists at `dist\Diya 0.11.1.exe`.
 - Verification: `npm run check` passes, including the Cloud test suite.
 - Readiness check: `npm run submission:check`.
 - Submission bundle: `npm run submission:bundle`.
