@@ -9,6 +9,7 @@
 - Submission bundle: `npm run submission:bundle`.
 - Public Cloud URL: `https://diya-cloud.vercel.app`.
 - Submission docs: `SUBMISSION.md` and `DEMO_SCRIPT.md`.
+- Public landing page: live at `https://diya-cloud.vercel.app`.
 
 ## Ready to show
 
@@ -20,10 +21,11 @@
 - Approval-first Agent mode.
 - Local Notion and Gmail connector demo paths.
 - Diya Cloud source, schema, encryption model, pairing flow, limits, and deployment runbook.
+- Public Diya landing and privacy pages on Vercel.
 
 ## Not ready to claim yet
 
-- The hosted Diya Cloud deployment is not production-green until Vercel has both `DIYA_DATABASE_URL` and `OPENAI_API_KEY`.
+- The hosted Diya Cloud API is not production-green until Vercel has both `DIYA_DATABASE_URL` and `OPENAI_API_KEY`.
 - The OpenAI key cannot be created or saved by Codex until the secure local destination confirmation is approved in the app.
 - Supabase's database password cannot be retrieved by Codex. Set `DIYA_DATABASE_URL` in Vercel from the Supabase dashboard transaction pooler string.
 
@@ -45,7 +47,7 @@ Shortcut for step 2 after you have the Supabase URL:
 
 ## Submission framing if time is tight
 
-Submit Diya as a working Windows desktop prototype with a production Cloud foundation implemented. Be precise: the local app and code are demo-ready; the public Cloud URL becomes live after the two remaining secrets are configured.
+Submit Diya as a working Windows desktop prototype with a live public site and a production Cloud foundation implemented. Be precise: the local app and public site are demo-ready; paired Cloud API features become live after the two remaining secrets are configured.
 
 Use `npm run submission:check` before submitting. It exits successfully when the local demo package is ready and prints the live Cloud status. Use `npm run submission:check:cloud` only when the submission must require a fully green hosted Cloud.
 

@@ -46,6 +46,25 @@ function getJson(url) {
   });
 }
 
+function getText(url) {
+  return new Promise((resolve) => {
+    const req = https.get(url, { timeout: 15000 }, (res) => {
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => { body += chunk; });
+      res.on("end", () => {
+        resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, statusCode: res.statusCode, body });
+      });
+    });
+    req.on("timeout", () => {
+      req.destroy(new Error("request timed out"));
+    });
+    req.on("error", (error) => {
+      resolve({ ok: false, statusCode: 0, body: error.message });
+    });
+  });
+}
+
 async function main() {
   const status = git(["status", "--short", "--branch"]);
   const aheadOrDirty = status.split(/\r?\n/).some((line, index) => {
@@ -54,7 +73,13 @@ async function main() {
   });
   const latestCommit = git(["log", "-1", "--oneline"]) || "unknown";
   const exePath = `dist\\Diya ${packageJson.version}.exe`;
+  const landing = await getText("https://diya-cloud.vercel.app/");
+  const privacy = await getText("https://diya-cloud.vercel.app/privacy");
   const health = await getJson("https://diya-cloud.vercel.app/health");
+  const publicSiteReady = Boolean(
+    landing.ok && landing.body.includes("A second cursor for when software gets") &&
+    privacy.ok && privacy.body.includes("Privacy at a glance")
+  );
   const liveCloudReady = Boolean(health.ok && health.body && health.body.ok === true && health.body.openaiConfigured === true);
 
   const localChecks = [
@@ -65,7 +90,12 @@ async function main() {
     check("readiness checklist exists", exists("HACKATHON_READINESS.md"), "HACKATHON_READINESS.md")
   ];
 
-  const cloudChecks = [
+  const publicChecks = [
+    check("landing page", landing.ok && landing.body.includes("A second cursor for when software gets"), landing.ok ? "https://diya-cloud.vercel.app/" : `HTTP ${landing.statusCode}: ${landing.body.slice(0, 160)}`),
+    check("privacy page", privacy.ok && privacy.body.includes("Privacy at a glance"), privacy.ok ? "https://diya-cloud.vercel.app/privacy" : `HTTP ${privacy.statusCode}: ${privacy.body.slice(0, 160)}`)
+  ];
+
+  const cloudApiChecks = [
     check("Diya Cloud health", liveCloudReady, health.ok ? JSON.stringify(health.body) : `HTTP ${health.statusCode}: ${typeof health.body === "string" ? health.body : JSON.stringify(health.body)}`)
   ];
 
@@ -80,14 +110,21 @@ async function main() {
     console.log(`- ${item.passed ? "PASS" : "FAIL"} ${item.name}: ${item.detail}`);
   }
   console.log("");
-  console.log(`Live cloud: ${liveCloudReady ? "READY" : "NOT READY"}`);
-  for (const item of cloudChecks) {
+  console.log(`Public site: ${publicSiteReady ? "LIVE" : "NOT READY"}`);
+  for (const item of publicChecks) {
+    console.log(`- ${item.passed ? "PASS" : "FAIL"} ${item.name}: ${item.detail}`);
+  }
+  console.log("");
+  console.log(`Cloud API: ${liveCloudReady ? "READY" : "NOT READY"}`);
+  for (const item of cloudApiChecks) {
     console.log(`- ${item.passed ? "PASS" : "FAIL"} ${item.name}: ${item.detail}`);
   }
   console.log("");
   console.log(liveCloudReady
     ? "Submission framing: local app plus live Diya Cloud are ready to claim."
-    : "Submission framing: local app is ready; claim Diya Cloud as implemented startup infrastructure until Vercel has DIYA_DATABASE_URL and OPENAI_API_KEY.");
+    : publicSiteReady
+      ? "Submission framing: local app and public Diya site are live; claim the Cloud API as implemented startup infrastructure until Vercel has DIYA_DATABASE_URL and OPENAI_API_KEY."
+      : "Submission framing: local app is ready; claim Diya Cloud as implemented startup infrastructure until Vercel has DIYA_DATABASE_URL and OPENAI_API_KEY.");
 
   if (!overallReady) {
     process.exitCode = 1;

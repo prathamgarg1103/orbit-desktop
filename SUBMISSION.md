@@ -30,9 +30,9 @@ Diya is an original name, visual system, and implementation inspired by the scre
 
 ## Submission readiness
 
-- **Ready now:** local Windows demo, portable app artifact, repository, demo script, privacy story, second-cursor interaction, on-screen guide, local approval-first agent flow, and Diya Cloud source.
-- **Needs final production secrets:** the hosted Diya Cloud URL must receive `DIYA_DATABASE_URL` and `OPENAI_API_KEY` in Vercel before it can be judged as a live cloud product.
-- **Recommended submission framing until cloud is green:** submit Diya as a working Windows prototype with a production Cloud path implemented, and show Cloud as the startup foundation rather than claiming the public URL is fully live.
+- **Ready now:** local Windows demo, portable app artifact, repository, demo script, privacy story, second-cursor interaction, on-screen guide, local approval-first agent flow, Diya Cloud source, and the public Diya site at `https://diya-cloud.vercel.app`.
+- **Needs final production secrets:** the hosted Diya Cloud API must receive `DIYA_DATABASE_URL` and `OPENAI_API_KEY` in Vercel before it can be judged as a fully live paired-cloud product.
+- **Recommended submission framing until cloud API is green:** submit Diya as a working Windows prototype with a live public site and implemented production Cloud path, while saying the paired Cloud API goes live after final Supabase/OpenAI secrets are configured.
 
 ## Final submission fields to add yourself
 
