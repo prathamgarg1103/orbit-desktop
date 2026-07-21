@@ -8,6 +8,7 @@ const packageJson = require(path.join(root, "package.json"));
 const requireCloud = process.argv.includes("--require-cloud");
 const releaseUrl = `https://github.com/prathamgarg1103/orbit-desktop/releases/tag/v${packageJson.version}`;
 const downloadUrl = `https://github.com/prathamgarg1103/orbit-desktop/releases/download/v${packageJson.version}/Diya.${packageJson.version}.exe`;
+const betaFeedbackUrl = "https://github.com/prathamgarg1103/orbit-desktop/issues/new/choose";
 
 function exists(relativePath) {
   return fs.existsSync(path.join(root, relativePath));
@@ -82,6 +83,7 @@ async function main() {
     landing.ok && landing.body.includes("A second cursor for when software gets") &&
     landing.body.includes(downloadUrl) &&
     landing.body.includes(releaseUrl) &&
+    landing.body.includes(betaFeedbackUrl) &&
     privacy.ok && privacy.body.includes("Privacy at a glance")
   );
   const liveCloudReady = Boolean(health.ok && health.body && health.body.ok === true && health.body.openaiConfigured === true);
@@ -103,6 +105,7 @@ async function main() {
     check("landing page", landing.ok && landing.body.includes("A second cursor for when software gets"), landing.ok ? "https://diya-cloud.vercel.app/" : `HTTP ${landing.statusCode}: ${landing.body.slice(0, 160)}`),
     check("Windows beta download link", landing.ok && landing.body.includes(downloadUrl), downloadUrl),
     check("release notes link", landing.ok && landing.body.includes(releaseUrl), releaseUrl),
+    check("beta feedback link", landing.ok && landing.body.includes(betaFeedbackUrl), betaFeedbackUrl),
     check("privacy page", privacy.ok && privacy.body.includes("Privacy at a glance"), privacy.ok ? "https://diya-cloud.vercel.app/privacy" : `HTTP ${privacy.statusCode}: ${privacy.body.slice(0, 160)}`)
   ];
 

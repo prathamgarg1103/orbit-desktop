@@ -53,6 +53,7 @@ test("pairs a desktop, encrypts connectors, and returns a private screen guide",
     const homepageText = await homepage.text();
     assert.match(homepageText, /A second cursor for when software gets <em>opaque/);
     assert.match(homepageText, /Diya\.0\.11\.1\.exe/);
+    assert.match(homepageText, /issues\/new\/choose/);
     const privacy = await fetch(`${cloudUrl}/privacy`);
     assert.equal(privacy.status, 200);
     assert.match(await privacy.text(), /Privacy at a glance/);

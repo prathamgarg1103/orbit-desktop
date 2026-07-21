@@ -1,4 +1,5 @@
 export const PUBLIC_PAGE_CSP = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+export const BETA_FEEDBACK_URL = "https://github.com/prathamgarg1103/orbit-desktop/issues/new/choose";
 
 export function launchPage() {
   return `<!doctype html>
@@ -73,13 +74,13 @@ export function launchPage() {
 </head>
 <body>
   <div class="shell">
-    <nav class="nav"><a class="wordmark" href="/"><span class="mark"></span>diya</a><div class="nav-links"><a href="/privacy">privacy at a glance</a><a class="download" href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">download beta</a></div></nav>
+    <nav class="nav"><a class="wordmark" href="/"><span class="mark"></span>diya</a><div class="nav-links"><a href="/privacy">privacy at a glance</a><a href="${BETA_FEEDBACK_URL}">report beta issue</a><a class="download" href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">download beta</a></div></nav>
     <main>
       <section>
         <p class="eyebrow">Early access for Windows</p>
         <h1>A second cursor for when software gets <em>opaque.</em></h1>
         <p class="lede">Press the hotkey, let Diya see the current screen once, and ask out loud. It answers in context, points at the interface, and only runs connected agents after you approve the action.</p>
-        <div class="cta-row"><a class="cta" href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">Download Windows beta</a><a class="release-link" href="https://github.com/prathamgarg1103/orbit-desktop/releases/tag/v0.11.1">View release notes</a></div>
+        <div class="cta-row"><a class="cta" href="https://github.com/prathamgarg1103/orbit-desktop/releases/download/v0.11.1/Diya.0.11.1.exe">Download Windows beta</a><a class="release-link" href="https://github.com/prathamgarg1103/orbit-desktop/releases/tag/v0.11.1">View release notes</a><a class="release-link" href="${BETA_FEEDBACK_URL}">Report beta feedback</a></div>
         <div class="signals"><span>Screen context starts only after your hotkey.</span><span>Guidance is drawn over the tool, not trapped in chat.</span><span>Gmail and Notion actions wait for approval.</span></div>
       </section>
       <section aria-labelledby="access-title">
