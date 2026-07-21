@@ -94,6 +94,7 @@ async function main() {
     check("readiness checklist exists", exists("HACKATHON_READINESS.md"), "HACKATHON_READINESS.md"),
     check("beta launch plan exists", exists("BETA_LAUNCH_PLAN.md"), "BETA_LAUNCH_PLAN.md"),
     check("startup runbook exists", exists("STARTUP_RUNBOOK.md"), "STARTUP_RUNBOOK.md"),
+    check("beta outreach kit exists", exists("BETA_OUTREACH_KIT.md"), "BETA_OUTREACH_KIT.md"),
     check("privacy policy exists", exists("PRIVACY.md"), "PRIVACY.md"),
     check("release notes exist", exists(`RELEASE_NOTES_v${packageJson.version}.md`), `RELEASE_NOTES_v${packageJson.version}.md`)
   ];

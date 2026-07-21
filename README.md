@@ -72,5 +72,6 @@ The tag must exactly match the desktop package version. A manual workflow dispat
 - [Under-three-minute demo script](DEMO_SCRIPT.md)
 - [Beta launch plan](BETA_LAUNCH_PLAN.md)
 - [Startup runbook](STARTUP_RUNBOOK.md)
+- [Beta outreach kit](BETA_OUTREACH_KIT.md)
 - [Privacy and data handling](PRIVACY.md)
 - [MIT license](LICENSE)
