@@ -43,6 +43,7 @@ let liveVoice = false;
 let activeRecorder;
 let cloudConnected = false;
 const POINTER_SIZE = { width: 38, height: 44 };
+const DEFAULT_CLOUD_URL = "https://diya-cloud.vercel.app";
 
 document.querySelector("#close").onclick = () => window.diya.close();
 document.querySelector("#settings").onclick = toggleSettings;
@@ -176,7 +177,7 @@ function openConnectorForm(provider, connected) {
   feedback.hidden = true;
   feedbackForm.hidden = true;
   connectorToken.value = "";
-  cloudUrl.value = "";
+  cloudUrl.value = provider === "cloud" ? DEFAULT_CLOUD_URL : "";
   notionParent.value = "";
   const name = provider === "cloud" ? "Diya Cloud" : provider === "openai" ? "OpenAI" : provider === "notion" ? "Notion" : "Gmail";
   connectorTitle.firstChild.textContent = `${connected ? "Manage" : "Connect"} ${name}`;
