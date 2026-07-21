@@ -6,6 +6,7 @@
 - Desktop app: portable Windows build exists at `dist\Diya 0.11.0.exe`.
 - Verification: `npm run check` passes, including the Cloud test suite.
 - Readiness check: `npm run submission:check`.
+- Submission bundle: `npm run submission:bundle`.
 - Public Cloud URL: `https://diya-cloud.vercel.app`.
 - Submission docs: `SUBMISSION.md` and `DEMO_SCRIPT.md`.
 
@@ -47,3 +48,5 @@ Shortcut for step 2 after you have the Supabase URL:
 Submit Diya as a working Windows desktop prototype with a production Cloud foundation implemented. Be precise: the local app and code are demo-ready; the public Cloud URL becomes live after the two remaining secrets are configured.
 
 Use `npm run submission:check` before submitting. It exits successfully when the local demo package is ready and prints the live Cloud status. Use `npm run submission:check:cloud` only when the submission must require a fully green hosted Cloud.
+
+Use `npm run submission:bundle` to create `dist\submission\Diya-hackathon-submission.zip` with the app, submission copy, demo script, readiness notes, README, license, and a manifest.
